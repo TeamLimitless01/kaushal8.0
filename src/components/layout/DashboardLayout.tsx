@@ -63,7 +63,7 @@ export default function DashboardLayout({
   const activeNavItems: NavItem[] = isStudent
     ? [
       { name: 'AI Waste Classifier', href: '/dashboard', icon: Camera, badge: 'AI' },
-      { name: 'IoT Live Telemetry', href: '/iot', icon: Activity, badge: 'LIVE' },
+      // { name: 'IoT Live Telemetry', href: '/iot', icon: Activity, badge: 'LIVE' },
       { name: 'Report & Earn', href: '/report', icon: Award, badge: '+Pts' },
       { name: 'Leaderboard', href: '/leaderboard', icon: Trophy },
     ]
@@ -161,11 +161,10 @@ export default function DashboardLayout({
 
                   {item.badge && (
                     <span
-                      className={`px-1.5 py-0.5 rounded-md text-[10px] font-extrabold flex items-center gap-1 ${
-                        item.badge === 'LIVE'
-                          ? 'bg-emerald-500/15 text-emerald-700 border border-emerald-400/30'
-                          : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                      }`}
+                      className={`px-1.5 py-0.5 rounded-md text-[10px] font-extrabold flex items-center gap-1 ${item.badge === 'LIVE'
+                        ? 'bg-emerald-500/15 text-emerald-700 border border-emerald-400/30'
+                        : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                        }`}
                     >
                       {item.badge === 'LIVE' && (
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping inline-block" />
