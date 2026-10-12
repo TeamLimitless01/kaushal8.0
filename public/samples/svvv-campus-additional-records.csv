@@ -1,0 +1,31 @@
+date,building,room,resource,usage,unit,operating_hours
+2026-10-11,"Block A (CSE & IT)","A101 Lab",electricity,44.9,kWh,8
+2026-10-11,"Block A (CSE & IT)","A102 Server Rm",electricity,44.2,kWh,8
+2026-10-11,"Block A (CSE & IT)","A201 Smart Class",electricity,45.7,kWh,8
+2026-10-12,"Block A (CSE & IT)","A101 Lab",electricity,45.2,kWh,8
+2026-10-12,"Block A (CSE & IT)","A102 Server Rm",electricity,44.8,kWh,8
+2026-10-12,"Block A (CSE & IT)","A201 Smart Class",electricity,47.2,kWh,8
+2026-10-13,"Block A (CSE & IT)","A101 Lab",electricity,44.8,kWh,8
+2026-10-13,"Block A (CSE & IT)","A102 Server Rm",electricity,43.8,kWh,8
+2026-10-13,"Block A (CSE & IT)","A201 Smart Class",electricity,46.9,kWh,8
+2026-10-14,"Block A (CSE & IT)","A101 Lab",electricity,43.1,kWh,8
+2026-10-14,"Block A (CSE & IT)","A102 Server Rm",electricity,44.2,kWh,8
+2026-10-14,"Block A (CSE & IT)","A201 Smart Class",electricity,46.6,kWh,8
+2026-10-15,"Block A (CSE & IT)","A101 Lab",electricity,44.7,kWh,8
+2026-10-15,"Block A (CSE & IT)","A102 Server Rm",electricity,45.4,kWh,8
+2026-10-15,"Block A (CSE & IT)","A201 Smart Class",electricity,43.7,kWh,8
+2026-10-16,"Block A (CSE & IT)","A101 Lab",electricity,43.9,kWh,8
+2026-10-16,"Block A (CSE & IT)","A102 Server Rm",electricity,45.8,kWh,8
+2026-10-16,"Block A (CSE & IT)","A201 Smart Class",electricity,45.6,kWh,8
+2026-10-17,"Block A (CSE & IT)","A101 Lab",electricity,47.2,kWh,8
+2026-10-17,"Block A (CSE & IT)","A102 Server Rm",electricity,45.2,kWh,8
+2026-10-17,"Block A (CSE & IT)","A201 Smart Class",electricity,45.5,kWh,8
+2026-10-18,"Block A (CSE & IT)","A101 Lab",electricity,43.0,kWh,8
+2026-10-18,"Block A (CSE & IT)","A102 Server Rm",electricity,46.4,kWh,8
+2026-10-18,"Block A (CSE & IT)","A201 Smart Class",electricity,43.7,kWh,8
+2026-10-19,"Block A (CSE & IT)","A101 Lab",electricity,44.1,kWh,8
+2026-10-19,"Block A (CSE & IT)","A102 Server Rm",electricity,45.9,kWh,8
+2026-10-19,"Block A (CSE & IT)","A201 Smart Class",electricity,43.9,kWh,8
+2026-10-20,"Block A (CSE & IT)","A101 Lab",electricity,46.5,kWh,8
+2026-10-20,"Block A (CSE & IT)","A102 Server Rm",electricity,45.0,kWh,8
+2026-10-20,"Block A (CSE & IT)","A201 Smart Class",electricity,47.0,kWh,8

@@ -1,0 +1,8 @@
+date,building,room,resource,usage,unit,operating_hours
+2026-10-01,Block A,A101,electricity,42.5,kWh,8
+2026-10-01,Block A,A102,electricity,38.0,kWh,8
+2026-10-01,Block B,B201,electricity,91.2,kWh,8
+2026-10-01,Central Library,L101,water,1250,L,12
+2026-10-01,Hostel Block 1,H101,waste,45.0,kg,16
+2026-10-02,Block A,A101,electricity,44.1,kWh,8
+2026-10-02,Block B,B201,electricity,94.0,kWh,8
