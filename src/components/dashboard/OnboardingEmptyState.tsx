@@ -99,7 +99,7 @@ export default function OnboardingEmptyState({
         </div>
 
         <h2 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-          Welcome to EcoSentinel
+          Welcome to EcoCampus
         </h2>
         <p className="mt-3 text-base text-slate-600 max-w-xl mx-auto">
           Start understanding your campus resource consumption. Upload your SVVV historical resource dataset to unlock live intelligence.

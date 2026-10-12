@@ -62,7 +62,7 @@ export default function DashboardLayout({
             <Leaf className="w-5 h-5" />
           </div>
           <span className="font-bold text-lg text-slate-900 tracking-tight">
-            EcoSentinel
+            EcoCampus
           </span>
         </Link>
         <button
@@ -86,7 +86,7 @@ export default function DashboardLayout({
             </div>
             <div>
               <h1 className="font-bold text-slate-900 tracking-tight leading-none text-base">
-                EcoSentinel
+                EcoCampus
               </h1>
               <p className="text-[11px] font-medium text-emerald-800 mt-0.5">
                 Campus Intelligence

@@ -7,7 +7,7 @@ export async function GET() {
     process.cwd(),
     'public',
     'templates',
-    'ecosentinel-resource-template.csv'
+    'EcoCampus-resource-template.csv'
   );
 
   if (!fs.existsSync(filePath)) {
@@ -19,7 +19,7 @@ export async function GET() {
   return new NextResponse(fileBuffer, {
     headers: {
       'Content-Type': 'text/csv',
-      'Content-Disposition': 'attachment; filename="ecosentinel-resource-template.csv"',
+      'Content-Disposition': 'attachment; filename="EcoCampus-resource-template.csv"',
     },
   });
 }
