@@ -83,7 +83,7 @@ const QUICK_CAMPUS_ITEMS = [
   { label: 'Charger Cable', hint: 'charger cable', icon: '🔌' },
 ];
 
-export default function WasteScannerPage() {
+function WasteScannerContent() {
   const searchParams = useSearchParams();
   const stationParam = searchParams.get('station');
   const { data: session } = useSession();
@@ -894,5 +894,13 @@ export default function WasteScannerPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function WasteScannerPage() {
+  return (
+    <React.Suspense fallback={<div className="p-8 text-center text-slate-500 text-xs">Loading Scanner...</div>}>
+      <WasteScannerContent />
+    </React.Suspense>
   );
 }

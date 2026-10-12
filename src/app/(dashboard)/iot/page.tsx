@@ -5,10 +5,11 @@ import {
   ResponsiveContainer,
   AreaChart,
   Area,
-  LineChart,
-  Line,
   BarChart,
   Bar,
+  PieChart,
+  Pie,
+  Cell,
   XAxis,
   YAxis,
   Tooltip,
@@ -20,63 +21,63 @@ import {
   Zap,
   Droplets,
   Trash2,
-  Wind,
+  IndianRupee,
+  Building,
+  CloudFog,
+  Trees,
+  Award,
+  TrendingUp,
+  TrendingDown,
   Gauge,
   Radio,
   Play,
   Pause,
-  FastForward,
   AlertTriangle,
   RotateCcw,
   Wifi,
-  Cpu,
   Server,
   Layers,
   CheckCircle2,
-  Sparkles,
-  ArrowUpRight,
-  ArrowDownRight,
-  Battery,
-  Flame,
-  Volume2,
-  VolumeX,
   Clock,
-  ShieldAlert,
   Send,
+  Sparkles,
 } from 'lucide-react';
 
 // Time filter options
 type TimeFilter = 'realtime' | 'past5m' | 'past10m' | 'today';
-type PowerViewMode = 'grid_solar' | 'phases' | 'efficiency';
+type ResourceMetric = 'electricity' | 'water' | 'waste' | 'cost';
 
+// Telemetry point definition
 interface TelemetryPoint {
   time: string;
   rawTime: number;
-  // Power & Energy
-  powerGridKw: number;
-  solarGenKw: number;
-  netDemandKw: number;
+  electricity: number; // kWh
+  water: number; // Liters
+  waste: number; // kg
+  cost: number; // INR
+  cumElectricity: number;
+  cumWater: number;
+  cumWaste: number;
+  cumCost: number;
+  // Substation physics
+  activeKw: number;
+  flowLpm: number;
   voltage: number;
   powerFactor: number;
-  frequency: number;
-  phaseR: number;
-  phaseY: number;
-  phaseB: number;
-  // Hydro
-  waterFlowLpm: number;
-  waterPressureBar: number;
-  tank1LevelPct: number;
-  tank2LevelPct: number;
-  // Waste Bins (fill %)
-  binCafeteriaPct: number;
-  binBlock2Pct: number;
-  binLibraryPct: number;
-  binBiotechPct: number;
-  // IEQ / Climate
-  co2Ppm: number;
-  pm25: number;
-  tempC: number;
-  humidityPct: number;
+}
+
+// Building breakdown item
+interface BuildingTelemetry {
+  id: string;
+  name: string;
+  electricity: number;
+  water: number;
+  waste: number;
+  cost: number;
+  status: 'Optimal' | 'Elevated' | 'Surging';
+  activeKw: number;
+  flowLpm: number;
+  binPct: number;
 }
 
 interface PacketLog {
@@ -84,14 +85,12 @@ interface PacketLog {
   timestamp: string;
   nodeId: string;
   protocol: 'MQTT' | 'LoRaWAN' | 'Modbus';
-  category: 'POWER' | 'HYDRO' | 'WASTE' | 'AIR';
+  category: 'POWER' | 'HYDRO' | 'WASTE' | 'FINANCE';
   topic: string;
   summary: string;
-  payload: Record<string, any>;
 }
 
-// Initial seed generators
-function formatTimeString(date: Date, includeSec = true): string {
+function formatTime(date: Date, includeSec = true): string {
   const h = String(date.getHours()).padStart(2, '0');
   const m = String(date.getMinutes()).padStart(2, '0');
   if (!includeSec) return `${h}:${m}`;
@@ -99,427 +98,545 @@ function formatTimeString(date: Date, includeSec = true): string {
   return `${h}:${m}:${s}`;
 }
 
-function generateInitialRealtimePoints(count = 20): TelemetryPoint[] {
-  const points: TelemetryPoint[] = [];
-  const now = Date.now();
-  const stepMs = 2000;
-
-  for (let i = count - 1; i >= 0; i--) {
-    const t = new Date(now - i * stepMs);
-    const baseKw = 135 + Math.sin(i * 0.4) * 8 + (Math.random() * 4 - 2);
-    const solarKw = Math.max(15, 45 + Math.sin(i * 0.2) * 5 + (Math.random() * 3 - 1.5));
-    const flowLpm = Math.max(20, 58 + Math.cos(i * 0.3) * 6 + (Math.random() * 4 - 2));
-
-    points.push({
-      time: formatTimeString(t, true),
-      rawTime: t.getTime(),
-      powerGridKw: Math.round(baseKw * 10) / 10,
-      solarGenKw: Math.round(solarKw * 10) / 10,
-      netDemandKw: Math.max(20, Math.round((baseKw - solarKw) * 10) / 10),
-      voltage: Math.round((230.5 + Math.random() * 2 - 1) * 10) / 10,
-      powerFactor: Math.round((0.97 + Math.random() * 0.02 - 0.01) * 100) / 100,
-      frequency: Math.round((50.0 + (Math.random() * 0.08 - 0.04)) * 100) / 100,
-      phaseR: Math.round((baseKw * 0.34 + Math.random() * 2) * 10) / 10,
-      phaseY: Math.round((baseKw * 0.33 + Math.random() * 2) * 10) / 10,
-      phaseB: Math.round((baseKw * 0.33 + Math.random() * 2) * 10) / 10,
-      waterFlowLpm: Math.round(flowLpm * 10) / 10,
-      waterPressureBar: Math.round((3.8 + Math.random() * 0.2 - 0.1) * 10) / 10,
-      tank1LevelPct: Math.round(82 - (i * 0.05)),
-      tank2LevelPct: Math.round(68 + (i * 0.04)),
-      binCafeteriaPct: Math.min(98, Math.round(76 + i * 0.3)),
-      binBlock2Pct: Math.min(95, Math.round(48 + i * 0.15)),
-      binLibraryPct: Math.min(90, Math.round(32 + i * 0.1)),
-      binBiotechPct: Math.min(95, Math.round(64 + i * 0.2)),
-      co2Ppm: Math.round(590 + Math.random() * 20 - 10),
-      pm25: Math.round(18 + Math.random() * 4 - 2),
-      tempC: Math.round((24.2 + Math.random() * 0.4 - 0.2) * 10) / 10,
-      humidityPct: Math.round(52 + Math.random() * 2 - 1),
-    });
-  }
-  return points;
-}
-
-function generatePast5mPoints(): TelemetryPoint[] {
-  const points: TelemetryPoint[] = [];
-  const now = Date.now();
-  const count = 30; // 1 every 10 seconds
-  const stepMs = 10000;
-
-  for (let i = count - 1; i >= 0; i--) {
-    const t = new Date(now - i * stepMs);
-    const wave = Math.sin((count - i) * 0.3);
-    const baseKw = 138 + wave * 12 + (Math.random() * 5 - 2.5);
-    const solarKw = 46 + Math.cos((count - i) * 0.2) * 6;
-    const flowLpm = 62 + wave * 9;
-
-    points.push({
-      time: formatTimeString(t, true),
-      rawTime: t.getTime(),
-      powerGridKw: Math.round(baseKw * 10) / 10,
-      solarGenKw: Math.round(solarKw * 10) / 10,
-      netDemandKw: Math.round((baseKw - solarKw) * 10) / 10,
-      voltage: Math.round((231 + Math.random() * 2 - 1) * 10) / 10,
-      powerFactor: 0.98,
-      frequency: 50.01,
-      phaseR: Math.round((baseKw * 0.34) * 10) / 10,
-      phaseY: Math.round((baseKw * 0.33) * 10) / 10,
-      phaseB: Math.round((baseKw * 0.33) * 10) / 10,
-      waterFlowLpm: Math.round(flowLpm * 10) / 10,
-      waterPressureBar: 3.8,
-      tank1LevelPct: Math.round(84 - (i * 0.1)),
-      tank2LevelPct: Math.round(66 + (i * 0.1)),
-      binCafeteriaPct: Math.min(95, Math.round(72 + (count - i) * 0.4)),
-      binBlock2Pct: Math.round(45 + (count - i) * 0.2),
-      binLibraryPct: Math.round(30 + (count - i) * 0.1),
-      binBiotechPct: Math.round(60 + (count - i) * 0.3),
-      co2Ppm: Math.round(600 + wave * 30),
-      pm25: Math.round(19 + wave * 3),
-      tempC: Math.round((24.0 + (count - i) * 0.02) * 10) / 10,
-      humidityPct: 53,
-    });
-  }
-  return points;
-}
-
-function generatePast10mPoints(): TelemetryPoint[] {
-  const points: TelemetryPoint[] = [];
-  const now = Date.now();
-  const count = 40; // 1 every 15 seconds
-  const stepMs = 15000;
-
-  for (let i = count - 1; i >= 0; i--) {
-    const t = new Date(now - i * stepMs);
-    const wave = Math.sin((count - i) * 0.2);
-    const baseKw = 132 + wave * 16 + (Math.random() * 6 - 3);
-    const solarKw = 48 + Math.cos((count - i) * 0.15) * 8;
-    const flowLpm = 58 + wave * 12;
-
-    points.push({
-      time: formatTimeString(t, true),
-      rawTime: t.getTime(),
-      powerGridKw: Math.round(baseKw * 10) / 10,
-      solarGenKw: Math.round(solarKw * 10) / 10,
-      netDemandKw: Math.round((baseKw - solarKw) * 10) / 10,
-      voltage: Math.round((230.8 + Math.random() * 1.5) * 10) / 10,
-      powerFactor: 0.97,
-      frequency: 50.0,
-      phaseR: Math.round((baseKw * 0.34) * 10) / 10,
-      phaseY: Math.round((baseKw * 0.33) * 10) / 10,
-      phaseB: Math.round((baseKw * 0.33) * 10) / 10,
-      waterFlowLpm: Math.round(flowLpm * 10) / 10,
-      waterPressureBar: 3.7,
-      tank1LevelPct: Math.round(86 - (i * 0.15)),
-      tank2LevelPct: Math.round(64 + (i * 0.15)),
-      binCafeteriaPct: Math.min(94, Math.round(68 + (count - i) * 0.5)),
-      binBlock2Pct: Math.round(42 + (count - i) * 0.3),
-      binLibraryPct: Math.round(28 + (count - i) * 0.15),
-      binBiotechPct: Math.round(56 + (count - i) * 0.35),
-      co2Ppm: Math.round(580 + wave * 45),
-      pm25: Math.round(18 + wave * 4),
-      tempC: Math.round((23.8 + (count - i) * 0.03) * 10) / 10,
-      humidityPct: 54,
-    });
-  }
-  return points;
-}
-
-function generateTodayPoints(): TelemetryPoint[] {
-  const points: TelemetryPoint[] = [];
-  const hours = [
-    '00:00', '01:00', '02:00', '03:00', '04:00', '05:00',
-    '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
-    '12:00', '13:00', '14:00', '15:00', '16:00', '17:00',
-    '18:00', '19:00', '20:00', '21:00', '22:00', '23:00',
-  ];
-
-  // Realistic daily university curve
-  const gridProfile = [
-    42, 38, 36, 35, 38, 45,
-    65, 95, 142, 168, 185, 192,
-    178, 182, 175, 160, 140, 115,
-    92, 75, 62, 55, 48, 44,
-  ];
-
-  const solarProfile = [
-    0, 0, 0, 0, 0, 0,
-    5, 18, 42, 68, 88, 98,
-    104, 98, 85, 62, 35, 12,
-    0, 0, 0, 0, 0, 0,
-  ];
-
-  const waterProfile = [
-    12, 10, 8, 8, 14, 25,
-    45, 78, 85, 72, 65, 88,
-    95, 82, 70, 64, 52, 40,
-    30, 25, 20, 18, 15, 14,
-  ];
-
-  const co2Profile = [
-    420, 415, 410, 410, 415, 430,
-    460, 520, 680, 780, 840, 810,
-    760, 820, 850, 790, 690, 580,
-    510, 480, 450, 440, 430, 425,
-  ];
-
-  const nowHour = new Date().getHours();
-
-  hours.forEach((hr, idx) => {
-    const isPastOrCurrent = idx <= nowHour;
-    const baseKw = gridProfile[idx] + (Math.random() * 6 - 3);
-    const solarKw = solarProfile[idx];
-    const flowLpm = waterProfile[idx];
-
-    points.push({
-      time: hr,
-      rawTime: idx,
-      powerGridKw: Math.round(baseKw * 10) / 10,
-      solarGenKw: Math.round(solarKw * 10) / 10,
-      netDemandKw: Math.max(10, Math.round((baseKw - solarKw) * 10) / 10),
-      voltage: 231.0,
-      powerFactor: 0.98,
-      frequency: 50.0,
-      phaseR: Math.round((baseKw * 0.34) * 10) / 10,
-      phaseY: Math.round((baseKw * 0.33) * 10) / 10,
-      phaseB: Math.round((baseKw * 0.33) * 10) / 10,
-      waterFlowLpm: Math.round(flowLpm * 10) / 10,
-      waterPressureBar: 3.8,
-      tank1LevelPct: Math.round(92 - (idx * 1.5)),
-      tank2LevelPct: Math.round(55 + (idx * 1.2)),
-      binCafeteriaPct: Math.min(96, Math.round(15 + idx * 3.8)),
-      binBlock2Pct: Math.min(92, Math.round(12 + idx * 2.8)),
-      binLibraryPct: Math.min(85, Math.round(10 + idx * 2.2)),
-      binBiotechPct: Math.min(90, Math.round(14 + idx * 3.1)),
-      co2Ppm: co2Profile[idx],
-      pm25: Math.round(14 + Math.sin(idx * 0.4) * 6),
-      tempC: Math.round((21 + Math.sin((idx - 6) * 0.25) * 6) * 10) / 10,
-      humidityPct: Math.round(62 - Math.sin((idx - 6) * 0.25) * 18),
-    });
-  });
-
-  return points;
-}
-
 export default function IotDashboardPage() {
   const [mounted, setMounted] = useState(false);
+  const [activeMetric, setActiveMetric] = useState<ResourceMetric>('electricity');
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('realtime');
+  const [chartMode, setChartMode] = useState<'rate' | 'cumulative'>('rate');
+
+  // Streaming controls
   const [isStreaming, setIsStreaming] = useState(true);
   const [streamSpeed, setStreamSpeed] = useState<number>(1500); // ms per tick
-  const [powerView, setPowerView] = useState<PowerViewMode>('grid_solar');
-  
-  // Anomaly / Simulation inject state
   const [activeAnomaly, setActiveAnomaly] = useState<'none' | 'power_surge' | 'water_burst' | 'bin_overflow'>('none');
-  const [anomalyDuration, setAnomalyDuration] = useState(0);
+  const [dispatchToast, setDispatchToast] = useState<string | null>(null);
 
-  // Total water counter accumulator
-  const [cumulativeWaterLiters, setCumulativeWaterLiters] = useState(42860);
+  // Live accumulators matching dashboard totals
+  const [totals, setTotals] = useState({
+    electricityKwh: 48250,
+    waterLiters: 320400,
+    wasteKg: 1450,
+    costInr: 395000,
+    sustainabilityScore: 78,
+    co2Kg: 39565,
+    potentialSavingsInr: 59250,
+  });
 
-  // Telemetry buffer
+  // Rolling telemetry buffers
   const [realtimeData, setRealtimeData] = useState<TelemetryPoint[]>([]);
   const [past5mData, setPast5mData] = useState<TelemetryPoint[]>([]);
   const [past10mData, setPast10mData] = useState<TelemetryPoint[]>([]);
   const [todayData, setTodayData] = useState<TelemetryPoint[]>([]);
 
-  // Raw packet audit logs
+  // Campus building state (dynamically fluctuates)
+  const [buildings, setBuildings] = useState<BuildingTelemetry[]>([
+    {
+      id: 'b-1',
+      name: 'Academic Block 2 (CSE & IT Hub)',
+      electricity: 18450,
+      water: 92400,
+      waste: 420,
+      cost: 152800,
+      status: 'Optimal',
+      activeKw: 52.4,
+      flowLpm: 22.8,
+      binPct: 54,
+    },
+    {
+      id: 'b-2',
+      name: 'Central Cafeteria Quad',
+      electricity: 8200,
+      water: 114200,
+      waste: 590,
+      cost: 72400,
+      status: 'Elevated',
+      activeKw: 31.8,
+      flowLpm: 34.2,
+      binPct: 88,
+    },
+    {
+      id: 'b-3',
+      name: 'Central Library',
+      electricity: 6400,
+      water: 24800,
+      waste: 110,
+      cost: 51900,
+      status: 'Optimal',
+      activeKw: 18.2,
+      flowLpm: 6.4,
+      binPct: 28,
+    },
+    {
+      id: 'b-4',
+      name: 'Science & Chemistry Complex',
+      electricity: 9800,
+      water: 48600,
+      waste: 210,
+      cost: 82400,
+      status: 'Optimal',
+      activeKw: 28.5,
+      flowLpm: 12.1,
+      binPct: 62,
+    },
+    {
+      id: 'b-5',
+      name: 'Hostels & Residential Block',
+      electricity: 5400,
+      water: 40400,
+      waste: 120,
+      cost: 35500,
+      status: 'Optimal',
+      activeKw: 15.6,
+      flowLpm: 9.8,
+      binPct: 35,
+    },
+  ]);
+
+  // Terminal logs
   const [packetLogs, setPacketLogs] = useState<PacketLog[]>([]);
   const [isTerminalPaused, setIsTerminalPaused] = useState(false);
-  const [dispatchNotice, setDispatchNotice] = useState<string | null>(null);
 
-  // Initialize data on mount to prevent SSR hydration discrepancies
+  // Metric styling & meta matching the dashboard
+  const metricConfigs = {
+    electricity: {
+      label: 'Campus Electricity',
+      unit: 'kWh',
+      rateUnit: 'kW Active Load',
+      icon: Zap,
+      color: '#10b981',
+      gradientId: 'iotGradElec',
+      textColor: 'text-emerald-700',
+      bgPill: 'bg-emerald-500 text-white shadow-emerald-500/20',
+      activeBorder: 'border-emerald-500',
+      sensorProtocol: 'Modbus RS-485 / MQTT Substation Gateway',
+    },
+    water: {
+      label: 'Campus Water',
+      unit: 'L',
+      rateUnit: 'L/min Hydro Flow',
+      icon: Droplets,
+      color: '#06b6d4',
+      gradientId: 'iotGradWater',
+      textColor: 'text-cyan-700',
+      bgPill: 'bg-cyan-500 text-white shadow-cyan-500/20',
+      activeBorder: 'border-cyan-500',
+      sensorProtocol: 'Ultrasonic Hydro-Flowmeter DN50 (LoRaWAN)',
+    },
+    waste: {
+      label: 'Waste Generation',
+      unit: 'kg',
+      rateUnit: 'Fill % & Daily kg',
+      icon: Trash2,
+      color: '#f59e0b',
+      gradientId: 'iotGradWaste',
+      textColor: 'text-amber-700',
+      bgPill: 'bg-amber-500 text-white shadow-amber-500/20',
+      activeBorder: 'border-amber-500',
+      sensorProtocol: 'Laser ToF & Ultrasonic Sonar Nodes (LoRaWAN)',
+    },
+    cost: {
+      label: 'Equivalent Cost',
+      unit: '₹',
+      rateUnit: '₹/hr Run-Rate',
+      icon: IndianRupee,
+      color: '#8b5cf6',
+      gradientId: 'iotGradCost',
+      textColor: 'text-purple-700',
+      bgPill: 'bg-purple-600 text-white shadow-purple-500/20',
+      activeBorder: 'border-purple-500',
+      sensorProtocol: 'Automated CEA Indian Grid Tariff Compute Engine',
+    },
+  };
+
+  const currentConfig = metricConfigs[activeMetric];
+
+  // Try fetching actual dashboard baseline from /api/dashboard on mount
   useEffect(() => {
     setMounted(true);
-    setRealtimeData(generateInitialRealtimePoints(20));
-    setPast5mData(generatePast5mPoints());
-    setPast10mData(generatePast10mPoints());
-    setTodayData(generateTodayPoints());
 
-    // Initial packet logs
-    const seedLogs: PacketLog[] = [
+    async function loadDashboardBaseline() {
+      try {
+        const res = await fetch('/api/dashboard');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.hasData && data.kpis) {
+            setTotals({
+              electricityKwh: Math.round(data.kpis.energy?.value || 48250),
+              waterLiters: Math.round(data.kpis.water?.value || 320400),
+              wasteKg: Math.round(data.kpis.waste?.value || 1450),
+              costInr: Math.round(data.kpis.cost?.value || 395000),
+              sustainabilityScore: data.kpis.sustainabilityScore || 78,
+              co2Kg: Math.round(data.kpis.co2EmissionsKg || 39565),
+              potentialSavingsInr: Math.round(data.kpis.potentialSavingsInr || 59250),
+            });
+
+            if (data.charts?.buildingComparison && data.charts.buildingComparison.length > 0) {
+              const mapped = data.charts.buildingComparison.map((b: any, idx: number) => ({
+                id: b.buildingId || `b-${idx}`,
+                name: b.buildingName,
+                electricity: Math.round(b.electricity),
+                water: Math.round(b.water),
+                waste: Math.round(b.waste),
+                cost: Math.round(b.totalCost),
+                status: idx === 1 ? 'Elevated' : 'Optimal',
+                activeKw: Math.round((b.electricity / 400) * 10) / 10,
+                flowLpm: Math.round((b.water / 3500) * 10) / 10,
+                binPct: Math.round(Math.min(95, 30 + idx * 15)),
+              }));
+              setBuildings(mapped);
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Using seeded dashboard telemetry baseline:', e);
+      }
+    }
+
+    loadDashboardBaseline();
+
+    // Generate initial time filters datasets
+    const now = Date.now();
+
+    // 1. Initial 20 rolling points for Realtime (2s steps)
+    const initRealtime: TelemetryPoint[] = [];
+    let rElec = 48200;
+    let rWater = 320300;
+    let rWaste = 1445;
+    let rCost = 394600;
+
+    for (let i = 19; i >= 0; i--) {
+      const t = new Date(now - i * 2000);
+      const activeKw = 142 + Math.sin(i * 0.4) * 10 + (Math.random() * 4 - 2);
+      const flowLpm = 64 + Math.cos(i * 0.3) * 8 + (Math.random() * 3 - 1.5);
+      const wasteRate = 0.8 + Math.random() * 0.4;
+      const costRate = Math.round(activeKw * 8.2);
+
+      rElec += Math.round((activeKw / 1800) * 10) / 10;
+      rWater += Math.round((flowLpm / 30) * 10) / 10;
+      rWaste += Math.round((wasteRate / 60) * 100) / 100;
+      rCost += Math.round(costRate / 1800);
+
+      initRealtime.push({
+        time: formatTime(t, true),
+        rawTime: t.getTime(),
+        electricity: Math.round(activeKw * 10) / 10,
+        water: Math.round(flowLpm * 10) / 10,
+        waste: Math.round(wasteRate * 10) / 10,
+        cost: costRate,
+        cumElectricity: Math.round(rElec),
+        cumWater: Math.round(rWater),
+        cumWaste: Math.round(rWaste * 10) / 10,
+        cumCost: Math.round(rCost),
+        activeKw: Math.round(activeKw * 10) / 10,
+        flowLpm: Math.round(flowLpm * 10) / 10,
+        voltage: 231.2,
+        powerFactor: 0.98,
+      });
+    }
+    setRealtimeData(initRealtime);
+
+    // 2. Past 5 min dataset (30 points, 10s steps)
+    const initPast5m: TelemetryPoint[] = [];
+    for (let i = 29; i >= 0; i--) {
+      const t = new Date(now - i * 10000);
+      const wave = Math.sin((30 - i) * 0.3);
+      const kw = 138 + wave * 14 + (Math.random() * 5 - 2.5);
+      const lpm = 62 + wave * 10 + (Math.random() * 4 - 2);
+      const kgRate = 0.9 + wave * 0.2;
+      const inrRate = Math.round(kw * 8.2);
+
+      initPast5m.push({
+        time: formatTime(t, true),
+        rawTime: t.getTime(),
+        electricity: Math.round(kw * 10) / 10,
+        water: Math.round(lpm * 10) / 10,
+        waste: Math.round(kgRate * 10) / 10,
+        cost: inrRate,
+        cumElectricity: Math.round(48150 + (30 - i) * 3.2),
+        cumWater: Math.round(319800 + (30 - i) * 20),
+        cumWaste: Math.round((1440 + (30 - i) * 0.3) * 10) / 10,
+        cumCost: Math.round(394200 + (30 - i) * 26),
+        activeKw: Math.round(kw * 10) / 10,
+        flowLpm: Math.round(lpm * 10) / 10,
+        voltage: 231.0,
+        powerFactor: 0.98,
+      });
+    }
+    setPast5mData(initPast5m);
+
+    // 3. Past 10 min dataset (40 points, 15s steps)
+    const initPast10m: TelemetryPoint[] = [];
+    for (let i = 39; i >= 0; i--) {
+      const t = new Date(now - i * 15000);
+      const wave = Math.sin((40 - i) * 0.2);
+      const kw = 134 + wave * 18 + (Math.random() * 6 - 3);
+      const lpm = 59 + wave * 13 + (Math.random() * 4 - 2);
+      const kgRate = 0.85 + wave * 0.3;
+      const inrRate = Math.round(kw * 8.2);
+
+      initPast10m.push({
+        time: formatTime(t, true),
+        rawTime: t.getTime(),
+        electricity: Math.round(kw * 10) / 10,
+        water: Math.round(lpm * 10) / 10,
+        waste: Math.round(kgRate * 10) / 10,
+        cost: inrRate,
+        cumElectricity: Math.round(48050 + (40 - i) * 5),
+        cumWater: Math.round(319200 + (40 - i) * 30),
+        cumWaste: Math.round((1435 + (40 - i) * 0.4) * 10) / 10,
+        cumCost: Math.round(393400 + (40 - i) * 41),
+        activeKw: Math.round(kw * 10) / 10,
+        flowLpm: Math.round(lpm * 10) / 10,
+        voltage: 230.8,
+        powerFactor: 0.97,
+      });
+    }
+    setPast10mData(initPast10m);
+
+    // 4. Today (24 Hours profile)
+    const hours = [
+      '00:00', '01:00', '02:00', '03:00', '04:00', '05:00',
+      '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
+      '12:00', '13:00', '14:00', '15:00', '16:00', '17:00',
+      '18:00', '19:00', '20:00', '21:00', '22:00', '23:00',
+    ];
+
+    const elecProfile = [
+      42, 38, 36, 35, 38, 45, 65, 95, 142, 168, 185, 192,
+      178, 182, 175, 160, 140, 115, 92, 75, 62, 55, 48, 44,
+    ];
+    const waterProfile = [
+      12, 10, 8, 8, 14, 25, 45, 78, 85, 72, 65, 88,
+      95, 82, 70, 64, 52, 40, 30, 25, 20, 18, 15, 14,
+    ];
+    const wasteProfile = [
+      5, 4, 3, 3, 6, 12, 28, 45, 58, 72, 85, 94,
+      98, 88, 74, 62, 48, 32, 24, 18, 14, 10, 8, 6,
+    ];
+
+    let cumElec = 0;
+    let cumWtr = 0;
+    let cumWst = 0;
+    let cumCst = 0;
+
+    const initToday: TelemetryPoint[] = hours.map((hr, idx) => {
+      const e = elecProfile[idx];
+      const w = waterProfile[idx];
+      const s = wasteProfile[idx];
+      const c = Math.round(e * 8.2);
+
+      cumElec += e;
+      cumWtr += w * 60;
+      cumWst += s;
+      cumCst += c;
+
+      return {
+        time: hr,
+        rawTime: idx,
+        electricity: e,
+        water: w,
+        waste: s,
+        cost: c,
+        cumElectricity: cumElec,
+        cumWater: cumWtr,
+        cumWaste: cumWst,
+        cumCost: cumCst,
+        activeKw: e,
+        flowLpm: w,
+        voltage: 231.0,
+        powerFactor: 0.98,
+      };
+    });
+    setTodayData(initToday);
+
+    // Initial packet stream seed
+    setPacketLogs([
       {
-        id: 'pkt-1',
-        timestamp: formatTimeString(new Date(Date.now() - 6000)),
-        nodeId: 'PWR-SUB-01',
+        id: 'p-1',
+        timestamp: formatTime(new Date(now - 4500)),
+        nodeId: 'PWR-MAIN-SUB01',
         protocol: 'MQTT',
         category: 'POWER',
-        topic: 'svvv/grid/substation/phase_rms',
-        summary: 'Active Demand: 142.4 kW | V_rms: 231.2V | PF: 0.98',
-        payload: { active_kw: 142.4, pf: 0.98, v_rms: 231.2, freq_hz: 50.02 },
+        topic: 'svvv/grid/electricity/kwh',
+        summary: 'Substation Load: 142.4 kW | 231.2V | PF: 0.98 | Total: 48,250 kWh',
       },
       {
-        id: 'pkt-2',
-        timestamp: formatTimeString(new Date(Date.now() - 4200)),
-        nodeId: 'SOL-ROOF-A',
-        protocol: 'Modbus',
-        category: 'POWER',
-        topic: 'svvv/solar/inverter/array_out',
-        summary: 'Solar Generation: 48.6 kW | Irradiance: 840 W/m²',
-        payload: { pv_kw: 48.6, eff_pct: 98.2, temp_c: 44.1 },
-      },
-      {
-        id: 'pkt-3',
-        timestamp: formatTimeString(new Date(Date.now() - 2500)),
-        nodeId: 'HYD-MAIN-03',
+        id: 'p-2',
+        timestamp: formatTime(new Date(now - 3200)),
+        nodeId: 'HYD-DN50-MTR03',
         protocol: 'MQTT',
         category: 'HYDRO',
-        topic: 'svvv/water/flow/main_line',
-        summary: 'Hydro Flow: 64.2 L/min | Line Pressure: 3.82 bar',
-        payload: { flow_lpm: 64.2, press_bar: 3.82, valve_pos: 'OPEN' },
+        topic: 'svvv/water/flow/liters',
+        summary: 'Hydro Velocity: 64.2 L/min | Pressure: 3.8 bar | Total: 320,400 L',
       },
       {
-        id: 'pkt-4',
-        timestamp: formatTimeString(new Date(Date.now() - 900)),
-        nodeId: 'BIN-CAFE-01',
+        id: 'p-3',
+        timestamp: formatTime(new Date(now - 1800)),
+        nodeId: 'BIN-CAFE-LORA',
         protocol: 'LoRaWAN',
         category: 'WASTE',
         topic: 'svvv/waste/sonar/cafeteria',
-        summary: 'Ultrasonic Sonar: 88.4% Capacity | Lid Cycles: 184',
-        payload: { fill_pct: 88.4, dist_cm: 14.2, battery_v: 3.64 },
+        summary: 'Ultrasonic Fill: 88% | Daily Mass: 590 kg | Station: Cafeteria Quad',
       },
-    ];
-    setPacketLogs(seedLogs);
+      {
+        id: 'p-4',
+        timestamp: formatTime(new Date(now - 600)),
+        nodeId: 'CEA-TARIFF-FIN01',
+        protocol: 'Modbus',
+        category: 'FINANCE',
+        topic: 'svvv/finance/cost/run_rate',
+        summary: 'Run-Rate: ₹1,180/hr | Cumulative: ₹3,95,000 INR | Carbon: 39,565 kg',
+      },
+    ]);
   }, []);
 
-  // Real-time ticking engine
+  // Realtime Live Streaming Engine
   useEffect(() => {
     if (!mounted || !isStreaming || timeFilter !== 'realtime') return;
 
     const interval = setInterval(() => {
       const now = new Date();
-      const timeStr = formatTimeString(now, true);
+      const timeStr = formatTime(now, true);
 
       setRealtimeData((prev) => {
         if (prev.length === 0) return prev;
         const last = prev[prev.length - 1];
 
-        // Anomaly injection influences
-        let surgeOffset = 0;
-        let waterSurgeOffset = 0;
-        let binSurgeOffset = 0;
+        // Anomaly offsets
+        let powerOffset = 0;
+        let waterOffset = 0;
+        let binOffset = 0;
 
-        if (activeAnomaly === 'power_surge') {
-          surgeOffset = 78.5; // Big jump to ~220 kW
-        } else if (activeAnomaly === 'water_burst') {
-          waterSurgeOffset = 42.0; // Jump to ~110 L/min
-        } else if (activeAnomaly === 'bin_overflow') {
-          binSurgeOffset = 18.0; // Pushes bin to 98%
-        }
+        if (activeAnomaly === 'power_surge') powerOffset = 75.0; // +75 kW spike
+        if (activeAnomaly === 'water_burst') waterOffset = 45.0; // +45 L/min burst
+        if (activeAnomaly === 'bin_overflow') binOffset = 15.0; // Push bin overfill
 
-        // Realistic subtle fluctuation
-        const randomPowerDrift = (Math.random() * 5 - 2.5);
-        const nextPower = Math.max(100, Math.min(260, last.powerGridKw + randomPowerDrift + surgeOffset));
-        const nextSolar = Math.max(10, Math.min(75, last.solarGenKw + (Math.random() * 2 - 1)));
-        const nextWaterFlow = Math.max(25, Math.min(130, last.waterFlowLpm + (Math.random() * 3 - 1.5) + waterSurgeOffset));
-        const nextPressure = activeAnomaly === 'water_burst' ? 2.1 : Math.round((3.8 + Math.random() * 0.1 - 0.05) * 10) / 10;
+        // Live values with micro-fluctuations
+        const nextActiveKw = Math.max(105, Math.min(260, last.activeKw + (Math.random() * 4 - 2) + powerOffset));
+        const nextFlowLpm = Math.max(25, Math.min(130, last.flowLpm + (Math.random() * 3 - 1.5) + waterOffset));
+        const nextWasteRate = Math.max(0.4, Math.min(2.5, last.waste + (Math.random() * 0.2 - 0.1) + (binOffset > 0 ? 0.8 : 0)));
+        const nextCostRate = Math.round(nextActiveKw * 8.2);
+
+        // Incremental accumulation to cumulative dashboard totals
+        const incElec = Math.round((nextActiveKw / 1800) * 10) / 10;
+        const incWater = Math.round((nextFlowLpm / 30) * 10) / 10;
+        const incWaste = Math.round((nextWasteRate / 60) * 100) / 100;
+        const incCost = Math.round(nextCostRate / 1800);
 
         const nextPoint: TelemetryPoint = {
           time: timeStr,
           rawTime: now.getTime(),
-          powerGridKw: Math.round(nextPower * 10) / 10,
-          solarGenKw: Math.round(nextSolar * 10) / 10,
-          netDemandKw: Math.max(15, Math.round((nextPower - nextSolar) * 10) / 10),
-          voltage: Math.round((230.8 + Math.random() * 1.8 - 0.9) * 10) / 10,
+          electricity: Math.round(nextActiveKw * 10) / 10,
+          water: Math.round(nextFlowLpm * 10) / 10,
+          waste: Math.round(nextWasteRate * 10) / 10,
+          cost: nextCostRate,
+          cumElectricity: Math.round(last.cumElectricity + incElec),
+          cumWater: Math.round(last.cumWater + incWater),
+          cumWaste: Math.round((last.cumWaste + incWaste) * 10) / 10,
+          cumCost: Math.round(last.cumCost + incCost),
+          activeKw: Math.round(nextActiveKw * 10) / 10,
+          flowLpm: Math.round(nextFlowLpm * 10) / 10,
+          voltage: Math.round((230.8 + Math.random() * 1.5 - 0.75) * 10) / 10,
           powerFactor: Math.round((0.97 + Math.random() * 0.02 - 0.01) * 100) / 100,
-          frequency: Math.round((50.0 + (Math.random() * 0.06 - 0.03)) * 100) / 100,
-          phaseR: Math.round((nextPower * 0.34 + Math.random() * 1.5) * 10) / 10,
-          phaseY: Math.round((nextPower * 0.33 + Math.random() * 1.5) * 10) / 10,
-          phaseB: Math.round((nextPower * 0.33 + Math.random() * 1.5) * 10) / 10,
-          waterFlowLpm: Math.round(nextWaterFlow * 10) / 10,
-          waterPressureBar: nextPressure,
-          tank1LevelPct: Math.max(40, Math.min(95, Math.round(last.tank1LevelPct + (Math.random() * 0.4 - 0.25)))),
-          tank2LevelPct: Math.max(30, Math.min(90, Math.round(last.tank2LevelPct + (Math.random() * 0.3 - 0.15)))),
-          binCafeteriaPct: Math.min(99, Math.max(10, Math.round(last.binCafeteriaPct + (Math.random() * 0.5 - 0.1) + binSurgeOffset))),
-          binBlock2Pct: Math.min(98, Math.max(10, Math.round(last.binBlock2Pct + (Math.random() * 0.3 - 0.1)))),
-          binLibraryPct: Math.min(95, Math.max(5, Math.round(last.binLibraryPct + (Math.random() * 0.2 - 0.05)))),
-          binBiotechPct: Math.min(98, Math.max(10, Math.round(last.binBiotechPct + (Math.random() * 0.3 - 0.1)))),
-          co2Ppm: Math.round(last.co2Ppm + (Math.random() * 8 - 4)),
-          pm25: Math.round(Math.max(10, last.pm25 + (Math.random() * 2 - 1))),
-          tempC: Math.round((last.tempC + (Math.random() * 0.1 - 0.05)) * 10) / 10,
-          humidityPct: Math.round(last.humidityPct + (Math.random() * 0.6 - 0.3)),
         };
 
-        // Keep rolling buffer of max 22 points for smooth visible motion
-        const updated = [...prev.slice(1), nextPoint];
-        return updated;
+        return [...prev.slice(1), nextPoint];
       });
 
-      // Increment water liters
-      setCumulativeWaterLiters((prev) => prev + Math.round(1.2 + Math.random() * 0.8));
+      // Update Top KPI Totals live!
+      setTotals((prev) => ({
+        ...prev,
+        electricityKwh: prev.electricityKwh + (Math.random() > 0.5 ? 1 : 0),
+        waterLiters: prev.waterLiters + Math.round(2 + Math.random() * 2),
+        costInr: prev.costInr + (Math.random() > 0.6 ? 2 : 1),
+      }));
 
-      // Append raw packet audit log
+      // Dynamically fluctuate building sensor values
+      setBuildings((prev) =>
+        prev.map((b, idx) => {
+          const deltaKw = Math.round((Math.random() * 1.6 - 0.8) * 10) / 10;
+          const deltaLpm = Math.round((Math.random() * 1.2 - 0.6) * 10) / 10;
+          const newActiveKw = Math.max(10, Math.round((b.activeKw + deltaKw) * 10) / 10);
+          const newFlowLpm = Math.max(4, Math.round((b.flowLpm + deltaLpm) * 10) / 10);
+
+          let newBin = b.binPct;
+          if (idx === 1 && activeAnomaly === 'bin_overflow') {
+            newBin = 98;
+          } else {
+            newBin = Math.min(99, Math.max(10, b.binPct + (Math.random() > 0.8 ? 1 : 0)));
+          }
+
+          return {
+            ...b,
+            activeKw: newActiveKw,
+            flowLpm: newFlowLpm,
+            binPct: newBin,
+            status: newBin >= 85 || newActiveKw > 60 ? 'Surging' : newBin >= 70 ? 'Elevated' : 'Optimal',
+          };
+        })
+      );
+
+      // Append real-time MQTT / LoRaWAN packet
       if (!isTerminalPaused) {
-        const protocols: Array<'MQTT' | 'LoRaWAN' | 'Modbus'> = ['MQTT', 'LoRaWAN', 'Modbus'];
-        const pCol = protocols[Math.floor(Math.random() * protocols.length)];
-        
-        let newLog: PacketLog;
-        const roll = Math.random();
-
-        if (roll < 0.3) {
-          const val = Math.round((140 + Math.random() * 10) * 10) / 10;
-          newLog = {
-            id: `pkt-${Date.now()}`,
+        let log: PacketLog;
+        if (activeMetric === 'electricity') {
+          log = {
+            id: `p-${Date.now()}`,
             timestamp: timeStr,
             nodeId: 'PWR-SUB-01',
             protocol: 'MQTT',
             category: 'POWER',
-            topic: 'svvv/grid/substation/telemetry',
-            summary: `Active Demand: ${val} kW | PF: 0.98 | V: 231.4V`,
-            payload: { active_kw: val, pf: 0.98, v_rms: 231.4 },
+            topic: 'svvv/grid/electricity/kwh',
+            summary: `Active Demand: ${(140 + Math.random() * 6).toFixed(1)} kW | Line V: 231.2V | PF: 0.98`,
           };
-        } else if (roll < 0.6) {
-          const flow = Math.round((60 + Math.random() * 12) * 10) / 10;
-          newLog = {
-            id: `pkt-${Date.now()}`,
+        } else if (activeMetric === 'water') {
+          log = {
+            id: `p-${Date.now()}`,
             timestamp: timeStr,
             nodeId: 'HYD-MAIN-03',
             protocol: 'MQTT',
             category: 'HYDRO',
-            topic: 'svvv/water/meter/flow_rate',
-            summary: `Flow Rate: ${flow} L/min | Pressure: 3.8 bar`,
-            payload: { flow_lpm: flow, press_bar: 3.8 },
+            topic: 'svvv/water/flow/liters',
+            summary: `Hydro Flow: ${(62 + Math.random() * 6).toFixed(1)} L/min | Pressure: 3.8 bar`,
           };
-        } else if (roll < 0.85) {
-          const fill = Math.round(75 + Math.random() * 15);
-          newLog = {
-            id: `pkt-${Date.now()}`,
+        } else if (activeMetric === 'waste') {
+          log = {
+            id: `p-${Date.now()}`,
             timestamp: timeStr,
             nodeId: 'BIN-CAFE-01',
             protocol: 'LoRaWAN',
             category: 'WASTE',
-            topic: 'svvv/waste/ultrasonic/node',
-            summary: `Sonar Fill: ${fill}% | RSSI: -74 dBm`,
-            payload: { fill_pct: fill, rssi_dbm: -74, snr: 9.2 },
+            topic: 'svvv/waste/sonar/cafeteria',
+            summary: `Sonar Fill: ${Math.round(85 + Math.random() * 5)}% | RSSI: -72 dBm | Battery: 3.64V`,
           };
         } else {
-          const co2 = Math.round(590 + Math.random() * 30);
-          newLog = {
-            id: `pkt-${Date.now()}`,
+          log = {
+            id: `p-${Date.now()}`,
             timestamp: timeStr,
-            nodeId: 'ENV-BLOCK2-04',
+            nodeId: 'CEA-FIN-ENGINE',
             protocol: 'Modbus',
-            category: 'AIR',
-            topic: 'svvv/ieq/sensirion/climate',
-            summary: `CO₂: ${co2} ppm | PM2.5: 16 µg/m³ | Temp: 24.2°C`,
-            payload: { co2_ppm: co2, pm25: 16, temp_c: 24.2 },
+            category: 'FINANCE',
+            topic: 'svvv/finance/cost/run_rate',
+            summary: `Dynamic Run-Rate: ₹${Math.round(1160 + Math.random() * 40)}/hr | Grid Tariff: ₹8.2/kWh`,
           };
         }
-
-        setPacketLogs((prev) => [newLog, ...prev.slice(0, 19)]);
+        setPacketLogs((prev) => [log, ...prev.slice(0, 19)]);
       }
     }, streamSpeed);
 
     return () => clearInterval(interval);
-  }, [mounted, isStreaming, timeFilter, streamSpeed, activeAnomaly, isTerminalPaused]);
+  }, [mounted, isStreaming, timeFilter, streamSpeed, activeAnomaly, isTerminalPaused, activeMetric]);
 
-  // Handle anomaly timeout auto-reset after 12 seconds
+  // Anomaly auto-restore
   useEffect(() => {
     if (activeAnomaly !== 'none') {
       const timer = setTimeout(() => {
         setActiveAnomaly('none');
-      }, 12000);
+      }, 10000);
       return () => clearTimeout(timer);
     }
   }, [activeAnomaly]);
 
-  // Current active dataset depending on filter
+  // Active dataset based on timeFilter
   const currentDataset = useMemo(() => {
     switch (timeFilter) {
       case 'past5m':
@@ -534,50 +651,53 @@ export default function IotDashboardPage() {
     }
   }, [timeFilter, realtimeData, past5mData, past10mData, todayData]);
 
-  // Latest point for KPI cards
+  // Latest instant reading for top cards
   const latest = useMemo(() => {
     if (currentDataset.length === 0) {
       return {
-        powerGridKw: 142.4,
-        solarGenKw: 48.6,
-        netDemandKw: 93.8,
+        electricity: 142.4,
+        water: 64.2,
+        waste: 0.9,
+        cost: 1180,
+        cumElectricity: 48250,
+        cumWater: 320400,
+        cumWaste: 1450,
+        cumCost: 395000,
+        activeKw: 142.4,
+        flowLpm: 64.2,
         voltage: 231.2,
         powerFactor: 0.98,
-        frequency: 50.02,
-        phaseR: 48.4,
-        phaseY: 47.0,
-        phaseB: 47.0,
-        waterFlowLpm: 64.2,
-        waterPressureBar: 3.8,
-        tank1LevelPct: 82,
-        tank2LevelPct: 68,
-        binCafeteriaPct: 88,
-        binBlock2Pct: 48,
-        binLibraryPct: 32,
-        binBiotechPct: 64,
-        co2Ppm: 595,
-        pm25: 18,
-        tempC: 24.2,
-        humidityPct: 52,
       };
     }
     return currentDataset[currentDataset.length - 1];
   }, [currentDataset]);
 
+  // Circular progress ring calculation (radius 28)
+  const radius = 28;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (totals.sustainabilityScore / 100) * circumference;
+
+  // Chart dataKey based on mode
+  const chartDataKey = useMemo(() => {
+    if (chartMode === 'cumulative') {
+      if (activeMetric === 'electricity') return 'cumElectricity';
+      if (activeMetric === 'water') return 'cumWater';
+      if (activeMetric === 'waste') return 'cumWaste';
+      return 'cumCost';
+    }
+    return activeMetric;
+  }, [chartMode, activeMetric]);
+
   // Handlers
-  const triggerAnomaly = (type: 'power_surge' | 'water_burst' | 'bin_overflow') => {
+  const handleTriggerAnomaly = (type: 'power_surge' | 'water_burst' | 'bin_overflow') => {
     setActiveAnomaly(type);
-    if (timeFilter !== 'realtime') {
-      setTimeFilter('realtime');
-    }
-    if (!isStreaming) {
-      setIsStreaming(true);
-    }
+    if (timeFilter !== 'realtime') setTimeFilter('realtime');
+    if (!isStreaming) setIsStreaming(true);
   };
 
-  const handleDispatchCrew = (stationName: string) => {
-    setDispatchNotice(`🚀 Autonomous Dispatch: Sanitation team notified for ${stationName}. GPS route generated.`);
-    setTimeout(() => setDispatchNotice(null), 5000);
+  const handleDispatchCrew = (buildingName: string) => {
+    setDispatchToast(`🚀 Autonomous Dispatch: Sanitation team notified for ${buildingName}. Real-time GPS dispatched.`);
+    setTimeout(() => setDispatchToast(null), 5000);
   };
 
   if (!mounted) {
@@ -586,22 +706,22 @@ export default function IotDashboardPage() {
         <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-600 animate-spin">
           <Activity className="w-6 h-6" />
         </div>
-        <p className="text-sm font-semibold text-slate-600">Initializing SVVV Campus IoT Gateway Stream...</p>
+        <p className="text-sm font-semibold text-slate-600">Connecting to SVVV Campus IoT Gateway & Modbus Grid...</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-6 pb-12">
-      {/* Dispatch or Anomaly Toast Notice */}
-      {dispatchNotice && (
-        <div className="p-4 rounded-2xl bg-emerald-900 text-white flex items-center justify-between shadow-xl shadow-emerald-950/20 animate-fade-in border border-emerald-700/50">
+      {/* Toast Alert Notice */}
+      {dispatchToast && (
+        <div className="p-4 rounded-2xl bg-emerald-900 text-white flex items-center justify-between shadow-xl shadow-emerald-950/20 border border-emerald-700/50">
           <div className="flex items-center gap-3">
-            <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
-            <p className="text-sm font-medium">{dispatchNotice}</p>
+            <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+            <p className="text-sm font-medium">{dispatchToast}</p>
           </div>
           <button
-            onClick={() => setDispatchNotice(null)}
+            onClick={() => setDispatchToast(null)}
             className="text-emerald-300 hover:text-white text-xs font-semibold px-2 py-1"
           >
             Dismiss
@@ -609,14 +729,14 @@ export default function IotDashboardPage() {
         </div>
       )}
 
-      {/* Header Banner & Live Control Center */}
+      {/* Top Banner: IoT Command Center & Live Telemetry Controls */}
       <div className="relative overflow-hidden rounded-3xl bg-slate-900 border border-slate-800 text-white p-6 md:p-8 shadow-2xl shadow-slate-950/40">
-        {/* Background glow effects */}
+        {/* Neon Glow backdrops */}
         <div className="absolute top-0 right-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 right-0 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-          {/* Title & Gateway Health */}
+          {/* Header Info */}
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-3">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold tracking-wide uppercase">
@@ -624,49 +744,48 @@ export default function IotDashboardPage() {
                   <span className={`absolute inline-flex h-full w-full rounded-full bg-emerald-400 ${isStreaming ? 'animate-ping' : ''} opacity-75`}></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                 </span>
-                {isStreaming ? 'Stream Active (LoRaWAN & MQTT)' : 'Stream Paused'}
+                {isStreaming ? 'Stream Active (Real-Time IoT)' : 'Stream Paused'}
               </div>
 
               <span className="text-xs text-slate-400 font-mono flex items-center gap-1.5">
                 <Server className="w-3.5 h-3.5 text-cyan-400" />
-                Gateway SVVV-IND-01 • 18ms Latency
+                SVVV Campus Gateway • 18ms Latency
               </span>
 
               {activeAnomaly !== 'none' && (
                 <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-red-500/20 border border-red-500/40 text-red-400 text-xs font-bold animate-pulse">
                   <AlertTriangle className="w-3.5 h-3.5" />
-                  Anomaly Active: {activeAnomaly.toUpperCase()}
+                  Spike Active: {activeAnomaly.toUpperCase()}
                 </span>
               )}
             </div>
 
             <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white flex items-center gap-3">
-              <span>Smart Campus IoT Telemetry</span>
-              <span className="text-xs font-semibold px-2.5 py-1 rounded-xl bg-slate-800 text-cyan-400 border border-slate-700 font-mono">
-                LIVE DEMO
+              <span>Campus IoT Live Telemetry</span>
+              <span className="text-xs font-semibold px-2.5 py-1 rounded-xl bg-slate-800 text-emerald-400 border border-slate-700 font-mono">
+                DASHBOARD METRICS (LIVE STREAM)
               </span>
             </h1>
 
             <p className="text-xs md:text-sm text-slate-400 max-w-2xl">
-              High-frequency multi-sensor telemetry stream showcasing SVVV campus smart grid, hydro-flow metering, ultrasonic waste monitoring, and indoor ambient air quality.
+              Live IoT simulation streaming the exact same campus sustainability data (Electricity, Water, Waste, Cost & Buildings) with high-frequency updates and flexible filters.
             </p>
           </div>
 
-          {/* Real-time Demo & Presentation Flex Controls */}
+          {/* Flex & Presentation Live Controls */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 bg-slate-800/80 backdrop-blur-md p-3 rounded-2xl border border-slate-700/60 shadow-lg">
             {/* Play/Pause Button */}
             <button
               onClick={() => setIsStreaming(!isStreaming)}
-              className={`flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm ${
-                isStreaming
-                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30'
-                  : 'bg-emerald-500 text-slate-950 font-extrabold hover:bg-emerald-400'
-              }`}
+              className={`flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm ${isStreaming
+                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30'
+                : 'bg-emerald-500 text-slate-950 font-extrabold hover:bg-emerald-400'
+                }`}
             >
               {isStreaming ? (
                 <>
                   <Pause className="w-3.5 h-3.5 fill-current" />
-                  <span>Pause</span>
+                  <span>Pause Stream</span>
                 </>
               ) : (
                 <>
@@ -676,46 +795,37 @@ export default function IotDashboardPage() {
               )}
             </button>
 
-            {/* Stream Speed Selector */}
-            <div className="flex items-center bg-slate-900/80 rounded-xl p-1 border border-slate-700/80 text-xs">
+            {/* Speed Multiplier */}
+            {/* <div className="flex items-center bg-slate-900/80 rounded-xl p-1 border border-slate-700/80 text-xs">
               <span className="text-[10px] text-slate-400 px-2 font-mono uppercase">Speed:</span>
               <button
                 onClick={() => setStreamSpeed(2000)}
-                className={`px-2 py-1 rounded-lg font-bold transition text-[11px] ${
-                  streamSpeed === 2000
-                    ? 'bg-emerald-500 text-slate-950 shadow-xs'
-                    : 'text-slate-400 hover:text-white'
-                }`}
+                className={`px-2 py-1 rounded-lg font-bold transition text-[11px] ${streamSpeed === 2000 ? 'bg-emerald-500 text-slate-950 shadow-xs' : 'text-slate-400 hover:text-white'
+                  }`}
               >
                 1x
               </button>
               <button
                 onClick={() => setStreamSpeed(800)}
-                className={`px-2 py-1 rounded-lg font-bold transition text-[11px] ${
-                  streamSpeed === 800
-                    ? 'bg-emerald-500 text-slate-950 shadow-xs'
-                    : 'text-slate-400 hover:text-white'
-                }`}
+                className={`px-2 py-1 rounded-lg font-bold transition text-[11px] ${streamSpeed === 800 ? 'bg-emerald-500 text-slate-950 shadow-xs' : 'text-slate-400 hover:text-white'
+                  }`}
               >
                 2x
               </button>
               <button
                 onClick={() => setStreamSpeed(300)}
-                className={`px-2 py-1 rounded-lg font-bold transition text-[11px] ${
-                  streamSpeed === 300
-                    ? 'bg-cyan-400 text-slate-950 shadow-xs font-extrabold'
-                    : 'text-slate-400 hover:text-cyan-300'
-                }`}
+                className={`px-2 py-1 rounded-lg font-bold transition text-[11px] ${streamSpeed === 300 ? 'bg-cyan-400 text-slate-950 shadow-xs font-extrabold' : 'text-slate-400 hover:text-cyan-300'
+                  }`}
               >
                 5x Flex ⚡
               </button>
-            </div>
+            </div> */}
 
-            {/* Quick Anomaly / Event Trigger Dropdown */}
+            {/* Anomaly Flex Spikes */}
             <div className="flex items-center gap-1.5">
               <button
-                onClick={() => triggerAnomaly('power_surge')}
-                title="Inject sudden 80 kW demand surge"
+                onClick={() => handleTriggerAnomaly('power_surge')}
+                title="Inject sudden 75 kW power surge"
                 className="px-2.5 py-1.5 rounded-xl bg-slate-700 hover:bg-amber-500/20 text-slate-300 hover:text-amber-300 border border-slate-600 text-xs font-semibold transition flex items-center gap-1"
               >
                 <Zap className="w-3 h-3 text-amber-400" />
@@ -723,16 +833,16 @@ export default function IotDashboardPage() {
               </button>
 
               <button
-                onClick={() => triggerAnomaly('water_burst')}
-                title="Inject pipe burst / leak warning"
+                onClick={() => handleTriggerAnomaly('water_burst')}
+                title="Inject water line burst"
                 className="px-2.5 py-1.5 rounded-xl bg-slate-700 hover:bg-cyan-500/20 text-slate-300 hover:text-cyan-300 border border-slate-600 text-xs font-semibold transition flex items-center gap-1"
               >
                 <Droplets className="w-3 h-3 text-cyan-400" />
-                <span>Leak</span>
+                <span>Burst</span>
               </button>
 
               <button
-                onClick={() => triggerAnomaly('bin_overflow')}
+                onClick={() => handleTriggerAnomaly('bin_overflow')}
                 title="Trigger 98% Cafeteria Bin Overflow"
                 className="px-2.5 py-1.5 rounded-xl bg-slate-700 hover:bg-red-500/20 text-slate-300 hover:text-red-300 border border-slate-600 text-xs font-semibold transition flex items-center gap-1"
               >
@@ -753,7 +863,7 @@ export default function IotDashboardPage() {
           </div>
         </div>
 
-        {/* Time Window Filters Bar */}
+        {/* Time Filters Bar */}
         <div className="relative z-10 mt-6 pt-5 border-t border-slate-800 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 mr-2">
@@ -764,11 +874,10 @@ export default function IotDashboardPage() {
             <div className="inline-flex p-1 bg-slate-800/90 rounded-2xl border border-slate-700">
               <button
                 onClick={() => setTimeFilter('realtime')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition ${
-                  timeFilter === 'realtime'
-                    ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
-                    : 'text-slate-400 hover:text-white'
-                }`}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition ${timeFilter === 'realtime'
+                  ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20'
+                  : 'text-slate-400 hover:text-white'
+                  }`}
               >
                 <span className={`w-1.5 h-1.5 rounded-full ${timeFilter === 'realtime' ? 'bg-slate-950 animate-ping' : 'bg-emerald-400'}`} />
                 <span>Realtime (Live Stream)</span>
@@ -776,33 +885,24 @@ export default function IotDashboardPage() {
 
               <button
                 onClick={() => setTimeFilter('past5m')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
-                  timeFilter === 'past5m'
-                    ? 'bg-emerald-500 text-slate-950 shadow-md'
-                    : 'text-slate-400 hover:text-white'
-                }`}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${timeFilter === 'past5m' ? 'bg-emerald-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-white'
+                  }`}
               >
                 Past 5 min
               </button>
 
               <button
                 onClick={() => setTimeFilter('past10m')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
-                  timeFilter === 'past10m'
-                    ? 'bg-emerald-500 text-slate-950 shadow-md'
-                    : 'text-slate-400 hover:text-white'
-                }`}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${timeFilter === 'past10m' ? 'bg-emerald-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-white'
+                  }`}
               >
                 Past 10 min
               </button>
 
               <button
                 onClick={() => setTimeFilter('today')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
-                  timeFilter === 'today'
-                    ? 'bg-emerald-500 text-slate-950 shadow-md'
-                    : 'text-slate-400 hover:text-white'
-                }`}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${timeFilter === 'today' ? 'bg-emerald-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-white'
+                  }`}
               >
                 Today (24h Diurnal)
               </button>
@@ -812,572 +912,469 @@ export default function IotDashboardPage() {
           <div className="flex items-center gap-4 text-xs text-slate-400 font-mono">
             <span>Points: <strong className="text-white">{currentDataset.length}</strong></span>
             <span>•</span>
-            <span>Freq: <strong className="text-emerald-400">{timeFilter === 'realtime' ? `${streamSpeed / 1000}s/pkt` : 'Aggregated'}</strong></span>
+            <span>Update: <strong className="text-emerald-400">{timeFilter === 'realtime' ? `${streamSpeed / 1000}s/tick` : 'Static Snapshot'}</strong></span>
             <span>•</span>
-            <span className="hidden sm:inline">Sensors: <strong className="text-cyan-400">18 Online</strong></span>
+            <span className="hidden sm:inline">Sensors: <strong className="text-cyan-400">24 IoT Nodes Online</strong></span>
           </div>
         </div>
       </div>
 
-      {/* 4 Primary Top Live KPI Tickers */}
+      {/* Primary KPI Command Cards (Showing the exact Dashboard data with live telemetry) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Card 1: Power Substation */}
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs relative overflow-hidden group hover:border-emerald-300 transition">
+        {/* KPI 1: Campus Electricity */}
+        <div
+          onClick={() => setActiveMetric('electricity')}
+          className={`bg-white border rounded-2xl p-5 shadow-xs cursor-pointer transition-all relative overflow-hidden ${activeMetric === 'electricity'
+            ? 'border-emerald-500 ring-2 ring-emerald-500/20'
+            : 'border-slate-200/80 hover:border-emerald-300'
+            }`}
+        >
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-              <Zap className="w-3.5 h-3.5 text-amber-500" />
-              Substation Load
+              <Zap className="w-3.5 h-3.5 text-emerald-600" />
+              Total Electricity
             </span>
             <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md">
               <Wifi className="w-3 h-3" />
-              231V / 50Hz
+              {latest.activeKw.toFixed(1)} kW Live
             </span>
           </div>
 
-          <div className="mt-3 flex items-baseline justify-between">
-            <div>
-              <p className="text-3xl font-extrabold text-slate-900 tracking-tight font-mono transition-all">
-                {latest.powerGridKw.toFixed(1)} <span className="text-base font-semibold text-slate-500 font-sans">kW</span>
-              </p>
-              <p className="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
-                Net Grid Draw: <span className="font-semibold text-slate-700">{latest.netDemandKw.toFixed(1)} kW</span>
-              </p>
-            </div>
-            <div className="text-right">
-              <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-1 rounded-lg">
-                ☀️ {latest.solarGenKw.toFixed(1)} kW
-              </span>
-              <p className="text-[10px] text-slate-400 mt-1">Solar PV Gen</p>
-            </div>
-          </div>
+          <p className="text-3xl font-extrabold text-slate-900 tracking-tight font-mono mt-3">
+            {totals.electricityKwh.toLocaleString('en-IN')} <span className="text-base font-semibold text-slate-500 font-sans">kWh</span>
+          </p>
 
-          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-            <span>Power Factor: <strong className="text-slate-800">{latest.powerFactor.toFixed(2)}</strong></span>
-            <span className="text-emerald-800 font-medium">Phase Balanced</span>
+          <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+            <span>Grid: <strong className="text-slate-800">{latest.voltage}V / 50Hz</strong></span>
+            <span className="text-emerald-800 font-semibold">PF {latest.powerFactor}</span>
           </div>
         </div>
 
-        {/* Card 2: Main Hydro Flow Rate */}
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs relative overflow-hidden group hover:border-cyan-300 transition">
+        {/* KPI 2: Water Consumption */}
+        <div
+          onClick={() => setActiveMetric('water')}
+          className={`bg-white border rounded-2xl p-5 shadow-xs cursor-pointer transition-all relative overflow-hidden ${activeMetric === 'water'
+            ? 'border-cyan-500 ring-2 ring-cyan-500/20'
+            : 'border-slate-200/80 hover:border-cyan-300'
+            }`}
+        >
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-              <Droplets className="w-3.5 h-3.5 text-cyan-500" />
-              Main Hydro Flow
+              <Droplets className="w-3.5 h-3.5 text-cyan-600" />
+              Water Consumption
             </span>
             <span className="flex items-center gap-1 text-[11px] font-bold text-cyan-800 bg-cyan-50 px-2 py-0.5 rounded-md">
               <Gauge className="w-3 h-3" />
-              {latest.waterPressureBar} bar
+              {latest.flowLpm.toFixed(1)} L/min
             </span>
           </div>
 
-          <div className="mt-3 flex items-baseline justify-between">
-            <div>
-              <p className="text-3xl font-extrabold text-slate-900 tracking-tight font-mono">
-                {latest.waterFlowLpm.toFixed(1)} <span className="text-base font-semibold text-slate-500 font-sans">L/min</span>
-              </p>
-              <p className="text-[11px] text-slate-500 mt-1">
-                Pipeline: <span className="font-semibold text-emerald-800">Nominal Pressure</span>
-              </p>
-            </div>
-            <div className="text-right">
-              <span className="text-xs font-bold text-cyan-900 font-mono">
-                {cumulativeWaterLiters.toLocaleString('en-IN')} L
-              </span>
-              <p className="text-[10px] text-slate-400 mt-0.5">Today Consumed</p>
-            </div>
-          </div>
+          <p className="text-3xl font-extrabold text-slate-900 tracking-tight font-mono mt-3">
+            {totals.waterLiters.toLocaleString('en-IN')} <span className="text-base font-semibold text-slate-500 font-sans">L</span>
+          </p>
 
-          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-            <span>Overhead Tank: <strong className="text-slate-800">{latest.tank1LevelPct}%</strong></span>
-            <span className="text-cyan-800 font-medium">Pump: Auto-Feed</span>
+          <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+            <span>Pipeline: <strong className="text-slate-800">3.8 bar</strong></span>
+            <span className="text-cyan-800 font-semibold">Auto-Pumping</span>
           </div>
         </div>
 
-        {/* Card 3: Smart Waste Ultrasonic Nodes */}
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs relative overflow-hidden group hover:border-amber-300 transition">
+        {/* KPI 3: Waste Generated */}
+        <div
+          onClick={() => setActiveMetric('waste')}
+          className={`bg-white border rounded-2xl p-5 shadow-xs cursor-pointer transition-all relative overflow-hidden ${activeMetric === 'waste'
+            ? 'border-amber-500 ring-2 ring-amber-500/20'
+            : 'border-slate-200/80 hover:border-amber-300'
+            }`}
+        >
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-              <Trash2 className="w-3.5 h-3.5 text-emerald-600" />
-              Ultrasonic Waste Bins
+              <Trash2 className="w-3.5 h-3.5 text-amber-600" />
+              Waste Generated
             </span>
-            <span className={`flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md ${
-              latest.binCafeteriaPct >= 85
-                ? 'bg-red-50 text-red-600 border border-red-200'
-                : 'bg-emerald-50 text-emerald-800'
-            }`}>
-              {latest.binCafeteriaPct >= 85 ? '1 Pickup Due' : 'All Optimal'}
+            <span className="flex items-center gap-1 text-[11px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md">
+              4 LoRa Bins
             </span>
           </div>
 
-          <div className="mt-3 flex items-baseline justify-between">
-            <div>
-              <p className="text-3xl font-extrabold text-slate-900 tracking-tight font-mono">
-                {Math.round((latest.binCafeteriaPct + latest.binBlock2Pct + latest.binLibraryPct + latest.binBiotechPct) / 4)}%
-                <span className="text-base font-semibold text-slate-500 font-sans"> Avg</span>
-              </p>
-              <p className="text-[11px] text-slate-500 mt-1">
-                Cafeteria Station: <span className={`font-bold ${latest.binCafeteriaPct >= 85 ? 'text-red-600' : 'text-slate-700'}`}>{latest.binCafeteriaPct}% full</span>
-              </p>
-            </div>
-            <div className="text-right">
-              <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-2 py-1 rounded-lg">
-                4 Nodes
-              </span>
-              <p className="text-[10px] text-slate-400 mt-1">LoRa Active</p>
-            </div>
-          </div>
+          <p className="text-3xl font-extrabold text-slate-900 tracking-tight font-mono mt-3">
+            {totals.wasteKg.toLocaleString('en-IN')} <span className="text-base font-semibold text-slate-500 font-sans">kg</span>
+          </p>
 
-          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-            <span>Battery: <strong className="text-slate-800">3.64V (98%)</strong></span>
-            <span className="text-slate-600">Lid cycles: 412/day</span>
+          <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+            <span>Sonar Fill: <strong className="text-slate-800">{buildings[1]?.binPct || 88}% Max</strong></span>
+            <span className="text-emerald-800 font-semibold">92% Diverted</span>
           </div>
         </div>
 
-        {/* Card 4: Environmental / Air Quality */}
-        <div className="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-xs relative overflow-hidden group hover:border-indigo-300 transition">
+        {/* KPI 4: Equivalent Cost */}
+        <div
+          onClick={() => setActiveMetric('cost')}
+          className={`bg-white border rounded-2xl p-5 shadow-xs cursor-pointer transition-all relative overflow-hidden ${activeMetric === 'cost'
+            ? 'border-purple-500 ring-2 ring-purple-500/20'
+            : 'border-slate-200/80 hover:border-purple-300'
+            }`}
+        >
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-              <Wind className="w-3.5 h-3.5 text-indigo-500" />
-              Air Quality & Climate
+              <IndianRupee className="w-3.5 h-3.5 text-purple-600" />
+              Estimated Cost
             </span>
-            <span className="flex items-center gap-1 text-[11px] font-bold text-indigo-800 bg-indigo-50 px-2 py-0.5 rounded-md">
-              {latest.tempC}°C • {latest.humidityPct}%
+            <span className="flex items-center gap-1 text-[11px] font-bold text-purple-800 bg-purple-50 px-2 py-0.5 rounded-md font-mono">
+              ₹{latest.cost}/hr
             </span>
           </div>
 
-          <div className="mt-3 flex items-baseline justify-between">
-            <div>
-              <p className="text-3xl font-extrabold text-slate-900 tracking-tight font-mono">
-                {latest.co2Ppm} <span className="text-base font-semibold text-slate-500 font-sans">ppm</span>
-              </p>
-              <p className="text-[11px] text-slate-500 mt-1">
-                CO₂ Level: <span className="font-semibold text-emerald-800">Clean & Fresh</span>
-              </p>
-            </div>
-            <div className="text-right">
-              <span className="text-xs font-bold text-indigo-800 bg-indigo-50 px-2 py-1 rounded-lg font-mono">
-                {latest.pm25} µg/m³
-              </span>
-              <p className="text-[10px] text-slate-400 mt-1">PM2.5 Index</p>
-            </div>
-          </div>
+          <p className="text-3xl font-extrabold text-slate-900 tracking-tight font-mono mt-3">
+            ₹{totals.costInr.toLocaleString('en-IN')}
+          </p>
 
-          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-            <span>AQI Rating: <strong className="text-emerald-800">Good (US-AQI 32)</strong></span>
-            <span className="text-emerald-800 font-medium">Optimal Classrooms</span>
+          <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+            <span>Tariff: <strong className="text-slate-800">CEA Tier-2</strong></span>
+            <span className="text-purple-800 font-semibold">Live Accrual</span>
           </div>
         </div>
       </div>
 
-      {/* Primary Section 1: Power Substation & Solar PV Telemetry */}
-      <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-          <div>
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 bg-amber-50 rounded-lg text-amber-600">
-                <Zap className="w-4 h-4" />
+      {/* Campus Sustainability Score & Carbon Offset Banner */}
+      <div className="p-6 sm:p-7 bg-gradient-to-br from-white via-slate-50 to-emerald-50/40 rounded-3xl border border-emerald-200/80 shadow-xs relative overflow-hidden">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative z-10">
+          {/* Radial progress ring */}
+          <div className="flex items-center gap-6">
+            <div className="relative w-20 h-20 shrink-0 flex items-center justify-center">
+              <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 72 72">
+                <circle cx="36" cy="36" r={radius} stroke="#e2e8f0" strokeWidth="6" fill="transparent" />
+                <circle
+                  cx="36"
+                  cy="36"
+                  r={radius}
+                  stroke="#10b981"
+                  strokeWidth="6"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={strokeDashoffset}
+                  strokeLinecap="round"
+                  fill="transparent"
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-xl font-black text-slate-900 leading-none">
+                  {totals.sustainabilityScore}
+                </span>
+                <span className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">/ 100</span>
               </div>
-              <h2 className="text-lg font-bold text-slate-900 tracking-tight">
-                Campus Electrical Substation & Solar Telemetry
-              </h2>
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Real-time active load demand (kW), rooftop solar generation offset, and phase synchronization
-            </p>
+
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                  Silver Standard EcoCampus
+                </span>
+                <span className="text-xs font-semibold text-slate-400">SVVV Indore</span>
+              </div>
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 mt-1">
+                Campus Environmental Intelligence & Carbon Footprint
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                IoT telemetry tracks resource consumption and generates automated CEA India emission factors in real-time.
+              </p>
+            </div>
           </div>
 
-          {/* Substation View Switcher */}
+          {/* Impact Stats */}
+          <div className="flex flex-wrap items-center gap-4 sm:gap-6 pt-4 lg:pt-0 border-t lg:border-t-0 border-slate-200 w-full lg:w-auto">
+            <div className="space-y-1">
+              <div className="flex items-center gap-1.5 text-xs text-slate-500 font-semibold">
+                <CloudFog className="w-3.5 h-3.5 text-slate-400" />
+                <span>Gross CO₂ Emissions</span>
+              </div>
+              <p className="text-lg font-extrabold text-slate-900 font-mono">
+                {totals.co2Kg.toLocaleString('en-IN')} kg
+              </p>
+            </div>
+
+            <div className="space-y-1">
+              <div className="flex items-center gap-1.5 text-xs text-slate-500 font-semibold">
+                <Trees className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Offset Requirement</span>
+              </div>
+              <p className="text-lg font-extrabold text-emerald-700 font-mono">
+                {Math.round(totals.co2Kg / 21.7).toLocaleString('en-IN')} Trees
+              </p>
+            </div>
+
+            <div className="space-y-1">
+              <div className="flex items-center gap-1.5 text-xs text-slate-500 font-semibold">
+                <TrendingDown className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Potential Savings</span>
+              </div>
+              <p className="text-lg font-extrabold text-emerald-700 font-mono">
+                ₹{totals.potentialSavingsInr.toLocaleString('en-IN')}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Section: Dynamic Streaming Trajectory Chart */}
+      <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-6">
+        {/* Metric Selector Tabs & Mode Toggle */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-slate-100">
+          {/* Resource Selector Buttons */}
+          <div className="flex flex-wrap items-center gap-2">
+            {(['electricity', 'water', 'waste', 'cost'] as ResourceMetric[]).map((metricKey) => {
+              const cfg = metricConfigs[metricKey];
+              const Icon = cfg.icon;
+              const isSelected = activeMetric === metricKey;
+
+              return (
+                <button
+                  key={metricKey}
+                  onClick={() => setActiveMetric(metricKey)}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer ${isSelected
+                    ? cfg.bgPill
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80 hover:text-slate-900'
+                    }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  <span>{cfg.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Rate vs Cumulative Toggle */}
           <div className="flex items-center gap-2">
-            <div className="inline-flex p-1 bg-slate-100 rounded-xl text-xs">
+            <div className="inline-flex items-center p-1 bg-slate-100 rounded-xl text-xs font-semibold text-slate-600">
               <button
-                onClick={() => setPowerView('grid_solar')}
-                className={`px-3 py-1.5 rounded-lg font-semibold transition ${
-                  powerView === 'grid_solar'
-                    ? 'bg-white text-slate-900 shadow-xs font-bold'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
+                onClick={() => setChartMode('rate')}
+                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${chartMode === 'rate' ? 'bg-white text-slate-900 shadow-xs font-bold' : 'hover:text-slate-900'
+                  }`}
               >
-                Grid vs Solar PV
+                Instant Telemetry Rate
               </button>
               <button
-                onClick={() => setPowerView('phases')}
-                className={`px-3 py-1.5 rounded-lg font-semibold transition ${
-                  powerView === 'phases'
-                    ? 'bg-white text-slate-900 shadow-xs font-bold'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
+                onClick={() => setChartMode('cumulative')}
+                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${chartMode === 'cumulative' ? 'bg-white text-slate-900 shadow-xs font-bold' : 'hover:text-slate-900'
+                  }`}
               >
-                3-Phase Balance (R/Y/B)
+                Cumulative Campus Total
               </button>
             </div>
           </div>
         </div>
 
-        {/* Live Recharts Area */}
+        {/* Chart Subhead */}
+        <div className="flex items-center justify-between text-xs text-slate-500">
+          <span className="flex items-center gap-1.5 font-medium">
+            <Radio className="w-3.5 h-3.5 text-emerald-600 animate-pulse" />
+            Sensor Interface: <strong className="text-slate-700">{currentConfig.sensorProtocol}</strong>
+          </span>
+          <span className="font-mono">
+            Metric: <strong className="text-slate-900">{chartMode === 'rate' ? currentConfig.rateUnit : currentConfig.unit}</strong>
+          </span>
+        </div>
+
+        {/* Recharts Streaming Area Chart */}
         <div className="h-72 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            {powerView === 'grid_solar' ? (
-              <AreaChart data={currentDataset} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="gradGrid" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
-                  </linearGradient>
-                  <linearGradient id="gradSolar" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.0} />
-                  </linearGradient>
-                  <linearGradient id="gradNet" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.2} />
-                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0.0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis
-                  dataKey="time"
-                  tickLine={false}
-                  axisLine={{ stroke: '#e2e8f0' }}
-                  tick={{ fill: '#64748b', fontSize: 11 }}
-                />
-                <YAxis
-                  unit=" kW"
-                  tickLine={false}
-                  axisLine={{ stroke: '#e2e8f0' }}
-                  tick={{ fill: '#64748b', fontSize: 11 }}
-                  domain={['auto', 'auto']}
-                />
-                <Tooltip
-                  content={({ active, payload, label }) => {
-                    if (!active || !payload || !payload.length) return null;
-                    return (
-                      <div className="bg-slate-900 border border-slate-700 text-white p-3 rounded-xl shadow-xl text-xs space-y-1">
-                        <p className="font-mono text-slate-400 font-bold border-b border-slate-800 pb-1">
-                          Timestamp: {label}
-                        </p>
-                        {payload.map((item, idx) => (
-                          <div key={idx} className="flex items-center justify-between gap-4">
-                            <span className="flex items-center gap-1.5" style={{ color: item.color }}>
-                              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
-                              {item.name}:
-                            </span>
-                            <span className="font-mono font-bold text-white">
-                              {item.value} kW
-                            </span>
-                          </div>
-                        ))}
+            <AreaChart data={currentDataset} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+              <defs>
+                <linearGradient id={currentConfig.gradientId} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={currentConfig.color} stopOpacity={0.4} />
+                  <stop offset="95%" stopColor={currentConfig.color} stopOpacity={0.0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+              <XAxis
+                dataKey="time"
+                tickLine={false}
+                axisLine={{ stroke: '#e2e8f0' }}
+                tick={{ fill: '#64748b', fontSize: 11 }}
+              />
+              <YAxis
+                unit={` ${currentConfig.unit}`}
+                tickLine={false}
+                axisLine={{ stroke: '#e2e8f0' }}
+                tick={{ fill: '#64748b', fontSize: 11 }}
+                domain={['auto', 'auto']}
+              />
+              <Tooltip
+                content={({ active, payload, label }) => {
+                  if (!active || !payload || !payload.length) return null;
+                  return (
+                    <div className="bg-slate-900 border border-slate-700 text-white p-3 rounded-xl shadow-xl text-xs space-y-1">
+                      <p className="font-mono text-slate-400 font-bold border-b border-slate-800 pb-1">
+                        Timestamp: {label}
+                      </p>
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="flex items-center gap-1.5" style={{ color: currentConfig.color }}>
+                          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: currentConfig.color }} />
+                          {currentConfig.label}:
+                        </span>
+                        <span className="font-mono font-bold text-white">
+                          {payload[0].value} {currentConfig.unit}
+                        </span>
                       </div>
-                    );
-                  }}
-                />
-                <Legend
-                  verticalAlign="top"
-                  align="right"
-                  iconType="circle"
-                  wrapperStyle={{ fontSize: 12, paddingBottom: 12 }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="powerGridKw"
-                  name="Gross Demand (kW)"
-                  stroke="#10b981"
-                  strokeWidth={2.5}
-                  fillOpacity={1}
-                  fill="url(#gradGrid)"
-                  isAnimationActive={false}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="solarGenKw"
-                  name="Solar Generation (kW)"
-                  stroke="#f59e0b"
-                  strokeWidth={2}
-                  fillOpacity={1}
-                  fill="url(#gradSolar)"
-                  isAnimationActive={false}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="netDemandKw"
-                  name="Net Grid Draw (kW)"
-                  stroke="#6366f1"
-                  strokeWidth={1.5}
-                  strokeDasharray="4 4"
-                  fillOpacity={1}
-                  fill="url(#gradNet)"
-                  isAnimationActive={false}
-                />
-              </AreaChart>
-            ) : (
-              <LineChart data={currentDataset} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis
-                  dataKey="time"
-                  tickLine={false}
-                  axisLine={{ stroke: '#e2e8f0' }}
-                  tick={{ fill: '#64748b', fontSize: 11 }}
-                />
-                <YAxis
-                  unit=" kW"
-                  tickLine={false}
-                  axisLine={{ stroke: '#e2e8f0' }}
-                  tick={{ fill: '#64748b', fontSize: 11 }}
-                />
-                <Tooltip />
-                <Legend
-                  verticalAlign="top"
-                  align="right"
-                  iconType="circle"
-                  wrapperStyle={{ fontSize: 12, paddingBottom: 12 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="phaseR"
-                  name="Phase R (Red)"
-                  stroke="#ef4444"
-                  strokeWidth={2}
-                  dot={false}
-                  isAnimationActive={false}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="phaseY"
-                  name="Phase Y (Yellow)"
-                  stroke="#eab308"
-                  strokeWidth={2}
-                  dot={false}
-                  isAnimationActive={false}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="phaseB"
-                  name="Phase B (Blue)"
-                  stroke="#3b82f6"
-                  strokeWidth={2}
-                  dot={false}
-                  isAnimationActive={false}
-                />
-              </LineChart>
-            )}
+                    </div>
+                  );
+                }}
+              />
+              <Area
+                type="monotone"
+                dataKey={chartDataKey}
+                name={currentConfig.label}
+                stroke={currentConfig.color}
+                strokeWidth={2.5}
+                fillOpacity={1}
+                fill={`url(#${currentConfig.gradientId})`}
+                isAnimationActive={false}
+              />
+            </AreaChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      {/* Dual Section 2: Water Flow & Smart Ultrasonic Bins */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Hydro Infrastructure & Reservoirs */}
-        <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs flex flex-col justify-between">
+      {/* Building-by-Building IoT Comparison Section (Live Bar Chart & Telemetry Status) */}
+      <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 bg-cyan-50 rounded-lg text-cyan-600">
-                  <Droplets className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-slate-900">
-                    Smart Hydro Metering & Tanks
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Real-time line velocity, hydraulic pressure & tank levels
-                  </p>
-                </div>
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 bg-emerald-50 rounded-lg text-emerald-600">
+                <Building className="w-4 h-4" />
               </div>
-              <span className="text-xs font-mono font-bold text-cyan-800 bg-cyan-50 px-2.5 py-1 rounded-lg">
-                {latest.waterFlowLpm.toFixed(1)} L/min
-              </span>
+              <h3 className="text-lg font-bold text-slate-900 tracking-tight">
+                Campus Building Telemetry & Live Sensor Matrix
+              </h3>
             </div>
-
-            {/* Hydro Chart */}
-            <div className="h-48 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={currentDataset} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="gradWater" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.4} />
-                      <stop offset="95%" stopColor="#06b6d4" stopOpacity={0.0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="time" tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} />
-                  <YAxis unit=" L/m" tick={{ fill: '#64748b', fontSize: 10 }} tickLine={false} />
-                  <Tooltip />
-                  <Area
-                    type="monotone"
-                    dataKey="waterFlowLpm"
-                    name="Flow Rate (L/min)"
-                    stroke="#0891b2"
-                    strokeWidth={2}
-                    fill="url(#gradWater)"
-                    isAnimationActive={false}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Live consumption distribution and smart meter readings across SVVV campus facilities
+            </p>
           </div>
 
-          {/* Live Dual Tank Visualizers */}
-          <div className="mt-5 pt-4 border-t border-slate-100 grid grid-cols-2 gap-4">
-            {/* Tank 1 */}
-            <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4">
-              <div className="flex items-center justify-between text-xs font-semibold text-slate-700 mb-2">
-                <span>Overhead Tank 1 (Academic)</span>
-                <span className="text-cyan-800 font-bold">{latest.tank1LevelPct}%</span>
-              </div>
-              <div className="w-full bg-slate-200 h-3 rounded-full overflow-hidden">
-                <div
-                  className="bg-cyan-500 h-full rounded-full transition-all duration-500"
-                  style={{ width: `${latest.tank1LevelPct}%` }}
-                />
-              </div>
-              <p className="text-[10px] text-slate-500 mt-2 flex items-center justify-between">
-                <span>Capacity: 25,000 L</span>
-                <span className="text-emerald-800 font-semibold">Feed Active</span>
-              </p>
-            </div>
-
-            {/* Tank 2 */}
-            <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4">
-              <div className="flex items-center justify-between text-xs font-semibold text-slate-700 mb-2">
-                <span>Underground Sump (Central)</span>
-                <span className="text-blue-700 font-bold">{latest.tank2LevelPct}%</span>
-              </div>
-              <div className="w-full bg-slate-200 h-3 rounded-full overflow-hidden">
-                <div
-                  className="bg-blue-600 h-full rounded-full transition-all duration-500"
-                  style={{ width: `${latest.tank2LevelPct}%` }}
-                />
-              </div>
-              <p className="text-[10px] text-slate-500 mt-2 flex items-center justify-between">
-                <span>Capacity: 60,000 L</span>
-                <span className="text-slate-600">Reserve Safe</span>
-              </p>
-            </div>
-          </div>
+          <span className="text-xs font-mono font-bold text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200 self-start sm:self-auto">
+            {buildings.length} Connected Facilities
+          </span>
         </div>
 
-        {/* Smart Ultrasonic Waste Stations */}
-        <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 bg-emerald-50 rounded-lg text-emerald-600">
-                  <Trash2 className="w-4 h-4" />
+        {/* Building Comparison Bar Chart */}
+        <div className="h-64 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={buildings.map((b) => ({
+                name: b.name.replace(/ \(.*\)/, ''),
+                value:
+                  activeMetric === 'electricity'
+                    ? b.electricity
+                    : activeMetric === 'water'
+                      ? b.water
+                      : activeMetric === 'waste'
+                        ? b.waste
+                        : b.cost,
+                activeRate:
+                  activeMetric === 'electricity'
+                    ? `${b.activeKw} kW`
+                    : activeMetric === 'water'
+                      ? `${b.flowLpm} L/m`
+                      : activeMetric === 'waste'
+                        ? `${b.binPct}% fill`
+                        : `₹${Math.round(b.activeKw * 8.2)}/hr`,
+              }))}
+              margin={{ top: 10, right: 10, left: -10, bottom: 20 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+              <XAxis
+                dataKey="name"
+                tickLine={false}
+                axisLine={{ stroke: '#e2e8f0' }}
+                tick={{ fill: '#64748b', fontSize: 11 }}
+                interval={0}
+              />
+              <YAxis
+                unit={` ${currentConfig.unit}`}
+                tickLine={false}
+                axisLine={{ stroke: '#e2e8f0' }}
+                tick={{ fill: '#64748b', fontSize: 11 }}
+              />
+              <Tooltip
+                content={({ active, payload, label }) => {
+                  if (!active || !payload || !payload.length) return null;
+                  return (
+                    <div className="bg-slate-900 border border-slate-700 text-white p-3 rounded-xl shadow-xl text-xs space-y-1">
+                      <p className="font-bold text-slate-300">{label}</p>
+                      <p className="font-mono text-emerald-400 font-bold">
+                        Total: {payload[0].value} {currentConfig.unit}
+                      </p>
+                      <p className="text-[11px] text-slate-400 font-mono">
+                        Live Sensor Draw: {payload[0].payload.activeRate}
+                      </p>
+                    </div>
+                  );
+                }}
+              />
+              <Bar dataKey="value" fill={currentConfig.color} radius={[6, 6, 0, 0]} isAnimationActive={false} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Live Facility Telemetry Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
+          {buildings.map((b) => (
+            <div
+              key={b.id}
+              className={`p-4 rounded-2xl border transition-all ${b.status === 'Surging'
+                ? 'bg-red-50/60 border-red-200'
+                : b.status === 'Elevated'
+                  ? 'bg-amber-50/50 border-amber-200'
+                  : 'bg-slate-50 border-slate-200/80 hover:bg-white hover:shadow-xs'
+                }`}
+            >
+              <div className="flex items-center justify-between text-xs mb-2">
+                <span className="font-bold text-slate-900 truncate max-w-[200px]">{b.name}</span>
+                <span
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${b.status === 'Surging'
+                    ? 'bg-red-100 text-red-700 animate-pulse'
+                    : b.status === 'Elevated'
+                      ? 'bg-amber-100 text-amber-800'
+                      : 'bg-emerald-100 text-emerald-800'
+                    }`}
+                >
+                  {b.status}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 text-[11px] text-slate-600 font-mono pt-1">
+                <div>
+                  <span className="text-[10px] text-slate-400 block font-sans">Power Load</span>
+                  <strong className="text-slate-900">{b.activeKw} kW</strong>
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900">
-                    Smart Ultrasonic Waste Stations
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Live LoRa sonar fill levels across 4 strategic campus hubs
-                  </p>
+                  <span className="text-[10px] text-slate-400 block font-sans">Water Flow</span>
+                  <strong className="text-cyan-700">{b.flowLpm} L/m</strong>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 block font-sans">Bin Fill</span>
+                  <strong className={b.binPct >= 85 ? 'text-red-600' : 'text-slate-900'}>{b.binPct}%</strong>
                 </div>
               </div>
-              <span className="text-xs text-slate-500 font-mono">LoRaWAN 868MHz</span>
+
+              {b.binPct >= 85 && (
+                <div className="mt-3 pt-2 border-t border-red-200/60 flex items-center justify-between">
+                  <span className="text-[10px] text-red-700 font-semibold">Overfill Warning</span>
+                  <button
+                    onClick={() => handleDispatchCrew(b.name)}
+                    className="text-[10px] font-bold text-red-700 hover:text-red-900 flex items-center gap-1 cursor-pointer"
+                  >
+                    <Send className="w-2.5 h-2.5" />
+                    Dispatch Team
+                  </button>
+                </div>
+              )}
             </div>
-
-            {/* 4 Station Progress Cards */}
-            <div className="space-y-3.5">
-              {/* Station 1: Cafeteria */}
-              <div className={`p-3.5 rounded-2xl border transition ${
-                latest.binCafeteriaPct >= 85
-                  ? 'bg-red-50/60 border-red-200'
-                  : 'bg-slate-50 border-slate-200/80'
-              }`}>
-                <div className="flex items-center justify-between text-xs mb-1.5">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-slate-900">1. Central Cafeteria (Station A)</span>
-                    {latest.binCafeteriaPct >= 85 && (
-                      <span className="text-[10px] font-extrabold px-1.5 py-0.2 bg-red-100 text-red-700 rounded-md animate-pulse">
-                        OVERFLOW ALERT
-                      </span>
-                    )}
-                  </div>
-                  <span className={`font-mono font-bold ${latest.binCafeteriaPct >= 85 ? 'text-red-600' : 'text-slate-700'}`}>
-                    {latest.binCafeteriaPct}% Full
-                  </span>
-                </div>
-                <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
-                  <div
-                    className={`h-full rounded-full transition-all duration-500 ${
-                      latest.binCafeteriaPct >= 85 ? 'bg-red-500' : 'bg-amber-500'
-                    }`}
-                    style={{ width: `${latest.binCafeteriaPct}%` }}
-                  />
-                </div>
-                <div className="flex items-center justify-between text-[10px] text-slate-500 mt-2">
-                  <span>Sensor: Sonar HC-SR04 (12cm)</span>
-                  {latest.binCafeteriaPct >= 85 ? (
-                    <button
-                      onClick={() => handleDispatchCrew('Central Cafeteria')}
-                      className="text-red-700 font-bold hover:underline flex items-center gap-1"
-                    >
-                      <Send className="w-2.5 h-2.5" />
-                      Dispatch Crew Now
-                    </button>
-                  ) : (
-                    <span>Status: Normal</span>
-                  )}
-                </div>
-              </div>
-
-              {/* Station 2: Block 2 Tech Hub */}
-              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80">
-                <div className="flex items-center justify-between text-xs mb-1.5">
-                  <span className="font-bold text-slate-900">2. Block 2 Tech Hub (Station B)</span>
-                  <span className="font-mono font-bold text-slate-700">{latest.binBlock2Pct}% Full</span>
-                </div>
-                <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
-                  <div
-                    className="bg-emerald-500 h-full rounded-full transition-all duration-500"
-                    style={{ width: `${latest.binBlock2Pct}%` }}
-                  />
-                </div>
-                <div className="flex items-center justify-between text-[10px] text-slate-500 mt-2">
-                  <span>Sensor: Laser ToF VL53L0X</span>
-                  <span className="text-emerald-800 font-semibold">Optimal Capacity</span>
-                </div>
-              </div>
-
-              {/* Station 3: Central Library */}
-              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80">
-                <div className="flex items-center justify-between text-xs mb-1.5">
-                  <span className="font-bold text-slate-900">3. Central Library (Station C)</span>
-                  <span className="font-mono font-bold text-slate-700">{latest.binLibraryPct}% Full</span>
-                </div>
-                <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
-                  <div
-                    className="bg-blue-500 h-full rounded-full transition-all duration-500"
-                    style={{ width: `${latest.binLibraryPct}%` }}
-                  />
-                </div>
-                <div className="flex items-center justify-between text-[10px] text-slate-500 mt-2">
-                  <span>Sensor: Sonar HC-SR04</span>
-                  <span className="text-slate-600">Low Utilization</span>
-                </div>
-              </div>
-
-              {/* Station 4: Biotech & Science Complex */}
-              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80">
-                <div className="flex items-center justify-between text-xs mb-1.5">
-                  <span className="font-bold text-slate-900">4. Science & Biotech Complex (Station D)</span>
-                  <span className="font-mono font-bold text-slate-700">{latest.binBiotechPct}% Full</span>
-                </div>
-                <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
-                  <div
-                    className="bg-indigo-500 h-full rounded-full transition-all duration-500"
-                    style={{ width: `${latest.binBiotechPct}%` }}
-                  />
-                </div>
-                <div className="flex items-center justify-between text-[10px] text-slate-500 mt-2">
-                  <span>Bio-Hazard Smart Latch: Locked</span>
-                  <span className="text-slate-600">Moderate</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
 
-      {/* Section 3: Live MQTT / LoRa Packet Stream Terminal */}
+      {/* Live MQTT / LoRaWAN Terminal Ingestion Stream */}
       <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 text-slate-300 shadow-2xl font-mono text-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-4 border-b border-slate-800">
           <div className="flex items-center gap-2">
@@ -1386,8 +1383,8 @@ export default function IotDashboardPage() {
               <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${isStreaming ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
             </span>
             <span className="font-bold text-white tracking-wide text-sm font-sans flex items-center gap-2">
-              <span>Live IoT Ingestion Packet Log</span>
-              <span className="text-[10px] px-2 py-0.5 rounded-md bg-slate-800 text-cyan-400 font-mono">
+              <span>Live Campus IoT Ingestion Feed</span>
+              <span className="text-[10px] px-2 py-0.5 rounded-md bg-slate-800 text-emerald-400 font-mono">
                 MQTT Broker / LoRaWAN Server
               </span>
             </span>
@@ -1396,13 +1393,13 @@ export default function IotDashboardPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsTerminalPaused(!isTerminalPaused)}
-              className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-sans font-medium transition"
+              className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-sans font-medium transition cursor-pointer"
             >
-              {isTerminalPaused ? 'Resume Terminal' : 'Pause Terminal'}
+              {isTerminalPaused ? 'Resume Feed' : 'Pause Feed'}
             </button>
             <button
               onClick={() => setPacketLogs([])}
-              className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white text-[11px] font-sans font-medium transition"
+              className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white text-[11px] font-sans font-medium transition cursor-pointer"
             >
               Clear
             </button>
@@ -1410,7 +1407,7 @@ export default function IotDashboardPage() {
         </div>
 
         {/* Scrollable Packet Stream */}
-        <div className="space-y-2 max-h-56 overflow-y-auto pr-2 scrollbar-thin">
+        <div className="space-y-2 max-h-52 overflow-y-auto pr-2 scrollbar-thin">
           {packetLogs.length === 0 ? (
             <p className="text-slate-600 italic py-4 text-center">Waiting for incoming telemetry packets...</p>
           ) : (
@@ -1421,13 +1418,12 @@ export default function IotDashboardPage() {
               >
                 <div className="flex items-center gap-3">
                   <span className="text-slate-500 text-[11px]">[{log.timestamp}]</span>
-                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                    log.protocol === 'MQTT'
-                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-                      : log.protocol === 'LoRaWAN'
+                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${log.protocol === 'MQTT'
+                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                    : log.protocol === 'LoRaWAN'
                       ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
                       : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/30'
-                  }`}>
+                    }`}>
                     {log.protocol}
                   </span>
                   <span className="text-cyan-300 font-semibold">{log.nodeId}</span>
