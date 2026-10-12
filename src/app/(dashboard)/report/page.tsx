@@ -96,6 +96,9 @@ const CAMPUS_LOCATIONS = [
 export default function SimpleReportAndEarnPage() {
   const [activeTab, setActiveTab] = useState<'report' | 'submissions' | 'leaderboard'>('report');
 
+  // Dynamic campus spots from database
+  const [campusSpots, setCampusSpots] = useState<string[]>(CAMPUS_LOCATIONS);
+
   // Input states
   const [mode, setMode] = useState<'upload' | 'camera'>('upload');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -117,13 +120,14 @@ export default function SimpleReportAndEarnPage() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Load telemetry data
+  // Load telemetry data and campus spots
   const loadData = async () => {
     try {
       setLoadingStats(true);
-      const [lbRes, subRes] = await Promise.all([
+      const [lbRes, subRes, bldRes] = await Promise.all([
         fetch('/api/report/leaderboard'),
         fetch('/api/report/my-submissions'),
+        fetch('/api/buildings'),
       ]);
 
       const lbData = await lbRes.json();
@@ -136,8 +140,17 @@ export default function SimpleReportAndEarnPage() {
       if (subData.success) {
         setSubmissions(subData.submissions);
       }
+
+      if (bldRes.ok) {
+        const bldData = await bldRes.json();
+        if (bldData.success && Array.isArray(bldData.buildings) && bldData.buildings.length > 0) {
+          const names: string[] = bldData.buildings.map((b: any) => b.name);
+          setCampusSpots(names);
+          setLocation((prev) => (names.includes(prev) ? prev : names[0]));
+        }
+      }
     } catch (err) {
-      console.error('Failed to load gamification telemetry', err);
+      console.error('Failed to load gamification telemetry or buildings', err);
     } finally {
       setLoadingStats(false);
     }
@@ -409,18 +422,23 @@ export default function SimpleReportAndEarnPage() {
             {/* Location & Query Notes */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>Campus Spot</span>
+                <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Campus Spot</span>
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-normal">
+                    {campusSpots.length} Dynamic Facilities
+                  </span>
                 </label>
                 <select
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   className="w-full text-xs font-semibold text-slate-800 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer"
                 >
-                  {CAMPUS_LOCATIONS.map((loc) => (
-                    <option key={loc} value={loc}>
-                      {loc}
+                  {campusSpots.map((spot) => (
+                    <option key={spot} value={spot}>
+                      {spot}
                     </option>
                   ))}
                 </select>
