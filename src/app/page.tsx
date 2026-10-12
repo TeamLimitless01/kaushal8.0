@@ -30,13 +30,13 @@ export default function HomePage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'anomalies' | 'simulation'>('overview');
 
   return (
-    <div className="relative min-h-screen w-full flex flex-col justify-between overflow-x-hidden bg-[#02150e] text-white selection:bg-emerald-500 selection:text-white">
+    <div className="relative min-h-screen w-full flex flex-col justify-between overflow-x-hidden bg-transparent text-white selection:bg-emerald-500 selection:text-white">
       {/* Dynamic Animated WebGL Shader Background */}
       <WebGLShader />
 
       {/* Ambient Gradient Glow Accents */}
-      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[450px] bg-emerald-500/10 blur-[140px] pointer-events-none -z-5" />
-      <div className="fixed bottom-0 right-0 w-[600px] h-[400px] bg-teal-500/10 blur-[130px] pointer-events-none -z-5" />
+      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[450px] bg-emerald-500/15 blur-[140px] pointer-events-none z-0" />
+      <div className="fixed bottom-0 right-0 w-[600px] h-[400px] bg-teal-500/15 blur-[130px] pointer-events-none z-0" />
 
       {/* Top Navigation */}
       <header className="relative z-30 w-full max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">

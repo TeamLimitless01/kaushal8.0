@@ -5,7 +5,7 @@ import { LiquidButton } from "@/components/ui/liquid-glass-button";
 
 export default function DemoOne() {
   return (
-    <div className="relative flex w-full flex-col items-center justify-center overflow-hidden min-h-screen bg-[#021a12]">
+    <div className="relative flex w-full flex-col items-center justify-center overflow-hidden min-h-screen bg-transparent">
       <WebGLShader />
       <div className="relative z-10 border border-[#27272a] p-2 w-full mx-auto max-w-3xl backdrop-blur-md bg-black/40 rounded-2xl shadow-2xl m-4">
         <main className="relative border border-[#27272a] py-10 px-6 overflow-hidden rounded-xl">
