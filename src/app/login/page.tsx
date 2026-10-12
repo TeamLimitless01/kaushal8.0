@@ -59,7 +59,7 @@ export default function ModernLoginPage() {
         setError(res.error || 'Invalid credentials. Please verify your email and password.');
         setIsLoading(false);
       } else {
-        router.push('/dashboard');
+        router.push(selectedRole == 'STUDENT' ? '/' : '/dashboard');
         router.refresh();
       }
     } catch {

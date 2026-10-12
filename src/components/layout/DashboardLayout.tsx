@@ -39,6 +39,8 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'IoT Telemetry', href: '/iot', icon: Activity, badge: 'LIVE' },
+  // { name: 'Classroom Streams', href: '/streams', icon: Video, badge: 'CCTV' },
+  { name: 'AI Sustainability Advisor', href: '/ai', icon: Sparkles },
   { name: 'Student Reports', href: '/admin/reports', icon: ClipboardCheck, badge: 'Review' },
   { name: 'Leaderboard', href: '/leaderboard', icon: Trophy },
   { name: 'AI Waste Classifier', href: '/scan', icon: Camera, badge: 'AI' },
@@ -62,10 +64,9 @@ export default function DashboardLayout({
 
   const activeNavItems: NavItem[] = isStudent
     ? [
-      { name: 'AI Waste Classifier', href: '/dashboard', icon: Camera, badge: 'AI' },
-      // { name: 'IoT Live Telemetry', href: '/iot', icon: Activity, badge: 'LIVE' },
-      { name: 'Report & Earn', href: '/report', icon: Award, badge: '+Pts' },
       { name: 'Leaderboard', href: '/leaderboard', icon: Trophy },
+      { name: 'AI Waste Classifier', href: '/dashboard', icon: Camera, badge: 'AI' },
+      { name: 'Report & Earn', href: '/report', icon: Award, badge: '+Pts' },
     ]
     : NAV_ITEMS;
 

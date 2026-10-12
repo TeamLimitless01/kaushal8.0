@@ -76,179 +76,179 @@ const ITEM_DETECTORS: Array<{
   category: string;
   explanation: string;
 }> = [
-  {
-    name: 'Polythene Bags & Thin Plastic Film (LDPE / HDPE)',
-    keywords: [
-      'polythin', 'polythene', 'poly bag', 'plastic bag', 'carry bag', 'shopping bag',
-      'polythene bag', 'cling film', 'bubble wrap', 'plastic pouch', 'poly', 'thin film', 'garbage bag'
-    ],
-    baseConfidence: 0.94,
-    category: 'LANDFILL_RESIDUAL',
-    explanation: 'Detected flexible lightweight low-density polyethylene (LDPE) carry film or packaging bag.',
-  },
-  {
-    name: 'Stainless Steel Water Bottle & Metal Flask',
-    keywords: [
-      'steal water bottel', 'steel water bottle', 'steel bottle', 'metal bottle', 'steal bottle',
-      'thermos', 'metal flask', 'stainless steel bottle', 'milton bottle', 'sipper', 'steel flask', 'flask', 'milton'
-    ],
-    baseConfidence: 0.96,
-    category: 'RECYCLABLE_DRY',
-    explanation: 'Detected rigid cylindrical metallic vessel with reflective stainless steel surface and insulated screw cap.',
-  },
-  {
-    name: 'Plastic Beverage Bottle (PET #1)',
-    keywords: [
-      'water bottel', 'plastic bottle', 'water bottle', 'bottle', 'pet', 'soda bottle',
-      'bisleri', 'aquafina', 'transparent bottle', 'kinley', 'drink bottle', 'pet bottle'
-    ],
-    baseConfidence: 0.95,
-    category: 'RECYCLABLE_DRY',
-    explanation: 'Detected blow-molded transparent Polyethylene Terephthalate (PETE) container with threaded neck.',
-  },
-  {
-    name: 'Ballpoint Pens, Gel Pens & Markers',
-    keywords: [
-      'pen', 'pens', 'ballpoint pen', 'gel pen', 'marker', 'sketch pen', 'highlighter',
-      'refill', 'fountain pen', 'ballpen', 'gelpen', 'use and throw pen', 'stationery pen', 'ink pen'
-    ],
-    baseConfidence: 0.94,
-    category: 'LANDFILL_RESIDUAL',
-    explanation: 'Detected cylindrical writing instrument with plastic barrel, tungsten/brass nib, and internal ink chamber.',
-  },
-  {
-    name: 'Wooden Pencils & Pencil Sharpenings',
-    keywords: [
-      'pencil', 'pencils', 'wooden pencil', 'graphite pencil', 'colored pencil',
-      'pencil shavings', 'lead pencil', 'apsara', 'natraj', 'shavings', 'sharpener shavings', 'pencil lead'
-    ],
-    baseConfidence: 0.93,
-    category: 'ORGANIC_WET',
-    explanation: 'Detected natural cedar wood casing containing graphite clay core, or pencil sharpener shavings.',
-  },
-  {
-    name: 'Small & Large Electrical Appliances',
-    keywords: [
-      'electronic applinces', 'electrical appliance', 'electronic appliance', 'kettle',
-      'electric kettle', 'toaster', 'iron', 'hair dryer', 'microwave', 'fan', 'heater',
-      'monitor', 'printer', 'computer', 'appliance', 'appliances', 'gadget', 'blender', 'mixer'
-    ],
-    baseConfidence: 0.96,
-    category: 'E_WASTE',
-    explanation: 'Detected electrical heating element, motor assembly, AC power cable, or electronic casing appliance.',
-  },
-  {
-    name: 'Scrap Metals, Utensils, Foil & Hardware',
-    keywords: [
-      'matels', 'matel', 'metal', 'metals', 'steel spoon', 'metal utensil', 'aluminum foil',
-      'screw', 'nut', 'bolt', 'metal rod', 'tin', 'key', 'wire mesh', 'brass', 'iron', 'steel plate', 'spoon', 'fork', 'cutlery'
-    ],
-    baseConfidence: 0.95,
-    category: 'RECYCLABLE_DRY',
-    explanation: 'Detected metallic reflective surfaces, stamped aluminum alloy, or forged iron/steel hardware.',
-  },
-  {
-    name: 'Rigid Plastics, Containers & Disposable Cutlery',
-    keywords: [
-      'plastic', 'plastics', 'plastic container', 'tupperware', 'plastic plate', 'plastic spoon',
-      'plastic fork', 'plastic box', 'takeaway container', 'pp box', 'tiffin', 'box', 'tray', 'plastic bowl'
-    ],
-    baseConfidence: 0.93,
-    category: 'RECYCLABLE_DRY',
-    explanation: 'Detected thermoformed or injection-molded rigid polymer (PP #5 or HDPE #2) container or dining cutlery.',
-  },
-  {
-    name: 'Notebooks, Office Paper & Exam Sheets',
-    keywords: [
-      'paper', 'notebook', 'book', 'exam sheet', 'white paper', 'loose sheets',
-      'newspaper', 'magazine', 'flyer', 'document', 'printout', 'pages', 'cardstock', 'notes'
-    ],
-    baseConfidence: 0.94,
-    category: 'RECYCLABLE_DRY',
-    explanation: 'Detected clean bleached cellulose paper pages, bound notebook sheets, or printed documents.',
-  },
-  {
-    name: 'Single-use Paper / Coffee Cup',
-    keywords: [
-      'coffee', 'tea', 'cup', 'chai', 'starbucks', 'paper cup', 'disposable cup',
-      'takeaway cup', 'cafe', 'tea cup', 'coffee cup'
-    ],
-    baseConfidence: 0.92,
-    category: 'LANDFILL_RESIDUAL',
-    explanation: 'Detected cylindrical paper-walled disposable beverage container with roll-rim edge and potential plastic interior lining.',
-  },
-  {
-    name: 'Lithium-Ion & Household Batteries',
-    keywords: [
-      'battery', 'batteries', 'aa', 'aaa', 'lithium', 'cell', 'power bank',
-      'cylindrical battery', 'duracell', 'panasonic', 'powerbank', 'rechargeable battery'
-    ],
-    baseConfidence: 0.97,
-    category: 'HAZARDOUS',
-    explanation: 'Detected electrochemical galvanic cell / battery with positive and negative contact terminals.',
-  },
-  {
-    name: 'Electronic Waste & Peripheral Cables',
-    keywords: [
-      'cable', 'charger', 'wire', 'usb', 'electronics', 'mouse', 'keyboard',
-      'circuit', 'pcb', 'adapter', 'cord', 'phone charger', 'data cable', 'headphone', 'earphones'
-    ],
-    baseConfidence: 0.94,
-    category: 'E_WASTE',
-    explanation: 'Detected copper wiring shielding, USB/lightning connector pins, or electronic circuit assemblies.',
-  },
-  {
-    name: 'Aluminum Beverage Can',
-    keywords: [
-      'can', 'soda can', 'aluminum', 'coke can', 'pepsi', 'tin can', 'red bull', 'beer can', 'pull tab', 'beverage can'
-    ],
-    baseConfidence: 0.95,
-    category: 'RECYCLABLE_DRY',
-    explanation: 'Detected cylindrical lightweight aluminum beverage container with scored easy-open pull-tab mechanism.',
-  },
-  {
-    name: 'Pizza Box & Food Cardboard',
-    keywords: ['pizza', 'pizza box', 'greasy box', 'dominos', 'takeout box', 'corrugated box'],
-    baseConfidence: 0.91,
-    category: 'LANDFILL_RESIDUAL',
-    explanation: 'Detected corrugated paperboard container commonly used for hot baked food delivery.',
-  },
-  {
-    name: 'Food Scraps, Peels & Organic Waste',
-    keywords: ['food', 'banana', 'peel', 'apple', 'vegetable', 'fruit', 'leftover', 'lunch', 'roti', 'rice', 'scraps'],
-    baseConfidence: 0.94,
-    category: 'ORGANIC_WET',
-    explanation: 'Detected post-consumer organic biodegradable food items and fruit peels.',
-  },
-  {
-    name: 'Styrofoam / Thermocol Container',
-    keywords: ['styrofoam', 'thermocol', 'foam', 'polystyrene', 'white foam', 'packing peanut'],
-    baseConfidence: 0.93,
-    category: 'LANDFILL_RESIDUAL',
-    explanation: 'Detected white expanded polystyrene (EPS #6) closed-cell foam material.',
-  },
-  {
-    name: 'Clean Glass Bottle & Jar',
-    keywords: ['glass', 'jar', 'glass bottle', 'jam jar', 'sauce bottle', 'silica'],
-    baseConfidence: 0.92,
-    category: 'RECYCLABLE_DRY',
-    explanation: 'Detected rigid non-porous silica glass container.',
-  },
-  {
-    name: 'Fluorescent Tube Light & CFL Bulb',
-    keywords: ['bulb', 'cfl', 'tube light', 'fluorescent', 'mercury', 'lamp', 'spiral bulb'],
-    baseConfidence: 0.95,
-    category: 'HAZARDOUS',
-    explanation: 'Detected gas-discharge fluorescent lighting bulb containing mercury vapor and phosphor coating.',
-  },
-  {
-    name: 'Laboratory Chemicals & Solvents',
-    keywords: ['chemical', 'acid', 'solvent', 'reagent', 'beaker', 'flask', 'toxic', 'hazardous liquid'],
-    baseConfidence: 0.97,
-    category: 'HAZARDOUS',
-    explanation: 'Detected specialized laboratory glass vessel or reagent container with hazardous chemical markings.',
-  },
-];
+    {
+      name: 'Polythene Bags & Thin Plastic Film (LDPE / HDPE)',
+      keywords: [
+        'polythin', 'polythene', 'poly bag', 'plastic bag', 'carry bag', 'shopping bag',
+        'polythene bag', 'cling film', 'bubble wrap', 'plastic pouch', 'poly', 'thin film', 'garbage bag'
+      ],
+      baseConfidence: 0.94,
+      category: 'LANDFILL_RESIDUAL',
+      explanation: 'Detected flexible lightweight low-density polyethylene (LDPE) carry film or packaging bag.',
+    },
+    {
+      name: 'Stainless Steel Water Bottle & Metal Flask',
+      keywords: [
+        'steal water bottel', 'steel water bottle', 'steel bottle', 'metal bottle', 'steal bottle',
+        'thermos', 'metal flask', 'stainless steel bottle', 'milton bottle', 'sipper', 'steel flask', 'flask', 'milton'
+      ],
+      baseConfidence: 0.96,
+      category: 'RECYCLABLE_DRY',
+      explanation: 'Detected rigid cylindrical metallic vessel with reflective stainless steel surface and insulated screw cap.',
+    },
+    {
+      name: 'Plastic Beverage Bottle (PET #1)',
+      keywords: [
+        'water bottel', 'plastic bottle', 'water bottle', 'bottle', 'pet', 'soda bottle',
+        'bisleri', 'aquafina', 'transparent bottle', 'kinley', 'drink bottle', 'pet bottle'
+      ],
+      baseConfidence: 0.95,
+      category: 'RECYCLABLE_DRY',
+      explanation: 'Detected blow-molded transparent Polyethylene Terephthalate (PETE) container with threaded neck.',
+    },
+    {
+      name: 'Ballpoint Pens, Gel Pens & Markers',
+      keywords: [
+        'pen', 'pens', 'ballpoint pen', 'gel pen', 'marker', 'sketch pen', 'highlighter',
+        'refill', 'fountain pen', 'ballpen', 'gelpen', 'use and throw pen', 'stationery pen', 'ink pen'
+      ],
+      baseConfidence: 0.94,
+      category: 'LANDFILL_RESIDUAL',
+      explanation: 'Detected cylindrical writing instrument with plastic barrel, tungsten/brass nib, and internal ink chamber.',
+    },
+    {
+      name: 'Wooden Pencils & Pencil Sharpenings',
+      keywords: [
+        'pencil', 'pencils', 'wooden pencil', 'graphite pencil', 'colored pencil',
+        'pencil shavings', 'lead pencil', 'apsara', 'natraj', 'shavings', 'sharpener shavings', 'pencil lead'
+      ],
+      baseConfidence: 0.93,
+      category: 'ORGANIC_WET',
+      explanation: 'Detected natural cedar wood casing containing graphite clay core, or pencil sharpener shavings.',
+    },
+    {
+      name: 'Small & Large Electrical Appliances',
+      keywords: [
+        'electronic applinces', 'electrical appliance', 'electronic appliance', 'kettle',
+        'electric kettle', 'toaster', 'iron', 'hair dryer', 'microwave', 'fan', 'heater',
+        'monitor', 'printer', 'computer', 'appliance', 'appliances', 'gadget', 'blender', 'mixer'
+      ],
+      baseConfidence: 0.96,
+      category: 'E_WASTE',
+      explanation: 'Detected electrical heating element, motor assembly, AC power cable, or electronic casing appliance.',
+    },
+    {
+      name: 'Scrap Metals, Utensils, Foil & Hardware',
+      keywords: [
+        'matels', 'matel', 'metal', 'metals', 'steel spoon', 'metal utensil', 'aluminum foil',
+        'screw', 'nut', 'bolt', 'metal rod', 'tin', 'key', 'wire mesh', 'brass', 'iron', 'steel plate', 'spoon', 'fork', 'cutlery'
+      ],
+      baseConfidence: 0.95,
+      category: 'RECYCLABLE_DRY',
+      explanation: 'Detected metallic reflective surfaces, stamped aluminum alloy, or forged iron/steel hardware.',
+    },
+    {
+      name: 'Rigid Plastics, Containers & Disposable Cutlery',
+      keywords: [
+        'plastic', 'plastics', 'plastic container', 'tupperware', 'plastic plate', 'plastic spoon',
+        'plastic fork', 'plastic box', 'takeaway container', 'pp box', 'tiffin', 'box', 'tray', 'plastic bowl'
+      ],
+      baseConfidence: 0.93,
+      category: 'RECYCLABLE_DRY',
+      explanation: 'Detected thermoformed or injection-molded rigid polymer (PP #5 or HDPE #2) container or dining cutlery.',
+    },
+    {
+      name: 'Notebooks, Office Paper & Exam Sheets',
+      keywords: [
+        'paper', 'notebook', 'book', 'exam sheet', 'white paper', 'loose sheets',
+        'newspaper', 'magazine', 'flyer', 'document', 'printout', 'pages', 'cardstock', 'notes'
+      ],
+      baseConfidence: 0.94,
+      category: 'RECYCLABLE_DRY',
+      explanation: 'Detected clean bleached cellulose paper pages, bound notebook sheets, or printed documents.',
+    },
+    {
+      name: 'Single-use Paper / Coffee Cup',
+      keywords: [
+        'coffee', 'tea', 'cup', 'chai', 'starbucks', 'paper cup', 'disposable cup',
+        'takeaway cup', 'cafe', 'tea cup', 'coffee cup'
+      ],
+      baseConfidence: 0.92,
+      category: 'LANDFILL_RESIDUAL',
+      explanation: 'Detected cylindrical paper-walled disposable beverage container with roll-rim edge and potential plastic interior lining.',
+    },
+    {
+      name: 'Lithium-Ion & Household Batteries',
+      keywords: [
+        'battery', 'batteries', 'aa', 'aaa', 'lithium', 'cell', 'power bank',
+        'cylindrical battery', 'duracell', 'panasonic', 'powerbank', 'rechargeable battery'
+      ],
+      baseConfidence: 0.97,
+      category: 'HAZARDOUS',
+      explanation: 'Detected electrochemical galvanic cell / battery with positive and negative contact terminals.',
+    },
+    {
+      name: 'Electronic Waste & Peripheral Cables',
+      keywords: [
+        'cable', 'charger', 'wire', 'usb', 'electronics', 'mouse', 'keyboard',
+        'circuit', 'pcb', 'adapter', 'cord', 'phone charger', 'data cable', 'headphone', 'earphones'
+      ],
+      baseConfidence: 0.94,
+      category: 'E_WASTE',
+      explanation: 'Detected copper wiring shielding, USB/lightning connector pins, or electronic circuit assemblies.',
+    },
+    {
+      name: 'Aluminum Beverage Can',
+      keywords: [
+        'can', 'soda can', 'aluminum', 'coke can', 'pepsi', 'tin can', 'red bull', 'beer can', 'pull tab', 'beverage can'
+      ],
+      baseConfidence: 0.95,
+      category: 'RECYCLABLE_DRY',
+      explanation: 'Detected cylindrical lightweight aluminum beverage container with scored easy-open pull-tab mechanism.',
+    },
+    {
+      name: 'Pizza Box & Food Cardboard',
+      keywords: ['pizza', 'pizza box', 'greasy box', 'dominos', 'takeout box', 'corrugated box'],
+      baseConfidence: 0.91,
+      category: 'LANDFILL_RESIDUAL',
+      explanation: 'Detected corrugated paperboard container commonly used for hot baked food delivery.',
+    },
+    {
+      name: 'Food Scraps, Peels & Organic Waste',
+      keywords: ['food', 'banana', 'peel', 'apple', 'vegetable', 'fruit', 'leftover', 'lunch', 'roti', 'rice', 'scraps'],
+      baseConfidence: 0.94,
+      category: 'ORGANIC_WET',
+      explanation: 'Detected post-consumer organic biodegradable food items and fruit peels.',
+    },
+    {
+      name: 'Styrofoam / Thermocol Container',
+      keywords: ['styrofoam', 'thermocol', 'foam', 'polystyrene', 'white foam', 'packing peanut'],
+      baseConfidence: 0.93,
+      category: 'LANDFILL_RESIDUAL',
+      explanation: 'Detected white expanded polystyrene (EPS #6) closed-cell foam material.',
+    },
+    {
+      name: 'Clean Glass Bottle & Jar',
+      keywords: ['glass', 'jar', 'glass bottle', 'jam jar', 'sauce bottle', 'silica'],
+      baseConfidence: 0.92,
+      category: 'RECYCLABLE_DRY',
+      explanation: 'Detected rigid non-porous silica glass container.',
+    },
+    {
+      name: 'Fluorescent Tube Light & CFL Bulb',
+      keywords: ['bulb', 'cfl', 'tube light', 'fluorescent', 'mercury', 'lamp', 'spiral bulb'],
+      baseConfidence: 0.95,
+      category: 'HAZARDOUS',
+      explanation: 'Detected gas-discharge fluorescent lighting bulb containing mercury vapor and phosphor coating.',
+    },
+    {
+      name: 'Laboratory Chemicals & Solvents',
+      keywords: ['chemical', 'acid', 'solvent', 'reagent', 'beaker', 'flask', 'toxic', 'hazardous liquid'],
+      baseConfidence: 0.97,
+      category: 'HAZARDOUS',
+      explanation: 'Detected specialized laboratory glass vessel or reagent container with hazardous chemical markings.',
+    },
+  ];
 
 /**
  * Call Google Gemini Multimodal Vision API if an API key is available

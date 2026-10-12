@@ -59,5 +59,7 @@ export const config = {
     '/imports/:path*',
     '/analytics/:path*',
     '/settings/:path*',
+    '/streams/:path*',
+    '/ai/:path*',
   ],
 };
