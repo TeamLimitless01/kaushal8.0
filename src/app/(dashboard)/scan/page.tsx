@@ -2,6 +2,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 import {
   Camera,
   Upload,
@@ -21,6 +23,8 @@ import {
   Check,
   ChevronRight,
   ScanLine,
+  Award,
+  Trophy,
 } from 'lucide-react';
 
 interface WasteRule {
@@ -82,6 +86,8 @@ const QUICK_CAMPUS_ITEMS = [
 export default function WasteScannerPage() {
   const searchParams = useSearchParams();
   const stationParam = searchParams.get('station');
+  const { data: session } = useSession();
+  const isAdmin = (session?.user as { role?: string })?.role === 'ADMIN';
 
   // Input States
   const [mode, setMode] = useState<'camera' | 'upload'>('camera');
@@ -391,8 +397,24 @@ export default function WasteScannerPage() {
 
         {/* Top Right Controls */}
         <div className="flex items-center gap-2.5 self-start sm:self-auto">
-          {/* Station Selector */}
-
+          {/* Quick CTA: Leaderboard for Admin, Report & Earn for Students */}
+          {isAdmin ? (
+            <Link
+              href="/leaderboard"
+              className="flex items-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-2xl text-xs font-bold shadow-xs shadow-amber-500/20 transition cursor-pointer"
+            >
+              <Trophy className="w-3.5 h-3.5" />
+              <span>Leaderboard</span>
+            </Link>
+          ) : (
+            <Link
+              href="/report"
+              className="flex items-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-2xl text-xs font-bold shadow-xs shadow-emerald-600/20 transition cursor-pointer"
+            >
+              <Award className="w-3.5 h-3.5" />
+              <span>Report & Earn (+Pts)</span>
+            </Link>
+          )}
 
           {/* Scan History Trigger */}
           <button

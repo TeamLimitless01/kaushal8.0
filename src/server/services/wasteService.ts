@@ -647,7 +647,7 @@ export async function classifyWasteItem(input: ClassifyWasteInput): Promise<Clas
     data: {
       userId: userId || null,
       stationId: stationId || null,
-      imageUrl: imageBase64 ? (imageBase64.length > 500 ? imageBase64.substring(0, 500) + '...' : imageBase64) : null,
+      imageUrl: imageBase64 || null,
       detectedItem: matchingRule.itemName,
       detectedCategory: matchingRule.category,
       confidenceScore: confidenceScore,

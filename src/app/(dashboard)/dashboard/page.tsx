@@ -1,4 +1,7 @@
-import React from 'react';
+import React, { Suspense } from 'react';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth/authOptions';
+import WasteScannerPage from '@/app/(dashboard)/scan/page';
 import { getDashboardData } from '@/server/services/analyticsService';
 import OnboardingEmptyState from '@/components/dashboard/OnboardingEmptyState';
 import KpiCards from '@/components/dashboard/KpiCards';
@@ -31,6 +34,18 @@ interface PageProps {
 }
 
 export default async function DashboardPage({ searchParams }: PageProps) {
+  const session = await getServerSession(authOptions);
+  const userRole = (session?.user as { role?: string })?.role;
+
+  // For Student login, exclusively render the AI Waste Classifier on the dashboard
+  if (userRole === 'STUDENT') {
+    return (
+      <Suspense fallback={<div className="p-8 text-center text-slate-500 text-xs">Loading AI Waste Classifier...</div>}>
+        <WasteScannerPage />
+      </Suspense>
+    );
+  }
+
   const resolvedParams = await searchParams;
 
   let resourceType: ResourceType | undefined = undefined;

@@ -23,6 +23,9 @@ import {
   BookOpen,
   QrCode,
   Sparkles,
+  Award,
+  ClipboardCheck,
+  Trophy,
 } from 'lucide-react';
 
 interface NavItem {
@@ -34,9 +37,9 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'Student Reports', href: '/admin/reports', icon: ClipboardCheck, badge: 'Review' },
+  { name: 'Leaderboard', href: '/leaderboard', icon: Trophy },
   { name: 'AI Waste Classifier', href: '/scan', icon: Camera, badge: 'AI' },
-  // { name: 'Campus Rules', href: '/rules', icon: BookOpen },
-  // { name: 'Waste Stations & QR', href: '/stations', icon: QrCode },
   { name: 'Data Explorer', href: '/data', icon: Database },
   { name: 'Imports', href: '/imports', icon: History },
   { name: 'Analytics', href: '/analytics', icon: TrendingUp },
@@ -50,8 +53,18 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const { data: session } = useSession();
+  const userRole = (session?.user as { role?: string })?.role;
+  const isStudent = userRole === 'STUDENT';
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+
+  const activeNavItems: NavItem[] = isStudent
+    ? [
+      { name: 'AI Waste Classifier', href: '/dashboard', icon: Camera, badge: 'AI' },
+      { name: 'Report & Earn', href: '/report', icon: Award, badge: '+Pts' },
+      { name: 'Leaderboard', href: '/leaderboard', icon: Trophy },
+    ]
+    : NAV_ITEMS;
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
@@ -89,35 +102,37 @@ export default function DashboardLayout({
                 EcoCampus
               </h1>
               <p className="text-[11px] font-medium text-emerald-800 mt-0.5">
-                Campus Intelligence
+                {isStudent ? 'Student Portal' : 'Campus Intelligence'}
               </p>
             </div>
           </div>
 
-          {/* Quick CTAs in Sidebar */}
-          <div className="px-4 pt-4 pb-2 space-y-1.5">
-            <Link
-              href="/scan"
-              onClick={() => setMobileMenuOpen(false)}
-              className="w-full flex items-center justify-center gap-2 py-2 px-3 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-sm transition"
-            >
-              <Camera className="w-4 h-4" />
-              <span>AI Waste Classifier</span>
-            </Link>
+          {/* Quick CTAs in Sidebar (Admin Only) */}
+          {!isStudent && (
+            <div className="px-4 pt-4 pb-2 space-y-1.5">
+              <Link
+                href="/scan"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full flex items-center justify-center gap-2 py-2 px-3 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-sm transition"
+              >
+                <Camera className="w-4 h-4" />
+                <span>AI Waste Classifier</span>
+              </Link>
 
-            <Link
-              href="/upload"
-              onClick={() => setMobileMenuOpen(false)}
-              className="w-full flex items-center justify-center gap-2 py-1.5 px-3 text-[11px] font-semibold text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-xl transition"
-            >
-              <UploadCloud className="w-3.5 h-3.5 text-slate-500" />
-              <span>Import Dataset</span>
-            </Link>
-          </div>
+              <Link
+                href="/upload"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full flex items-center justify-center gap-2 py-1.5 px-3 text-[11px] font-semibold text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-xl transition"
+              >
+                <UploadCloud className="w-3.5 h-3.5 text-slate-500" />
+                <span>Import Dataset</span>
+              </Link>
+            </div>
+          )}
 
           {/* Navigation Items */}
           <nav className="p-3 space-y-1">
-            {NAV_ITEMS.map((item) => {
+            {activeNavItems.map((item) => {
               const isActive =
                 pathname === item.href ||
                 (item.href !== '/dashboard' && pathname?.startsWith(item.href));
@@ -181,7 +196,7 @@ export default function DashboardLayout({
           <div className="flex items-center gap-3">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200/60">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-              SVVV Indore Core Campus
+              {isStudent ? 'SVVV Student Portal • EcoCampus' : 'SVVV Indore Core Campus'}
             </span>
           </div>
 
@@ -204,14 +219,14 @@ export default function DashboardLayout({
                 className="flex items-center gap-2 pl-2 pr-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 rounded-xl transition border border-transparent hover:border-slate-200"
               >
                 <div className="w-7 h-7 rounded-lg bg-emerald-800 text-white flex items-center justify-center font-bold text-xs">
-                  {session?.user?.name ? session.user.name.charAt(0) : 'A'}
+                  {session?.user?.name ? session.user.name.charAt(0) : isStudent ? 'S' : 'A'}
                 </div>
                 <div className="text-left hidden sm:block">
                   <p className="font-semibold text-slate-900 leading-tight">
-                    {session?.user?.name || 'Administrator'}
+                    {session?.user?.name || (isStudent ? 'Campus Student' : 'Administrator')}
                   </p>
                   <p className="text-[10px] text-slate-500">
-                    {session?.user?.email || 'admin@svvv.in'}
+                    {session?.user?.email || (isStudent ? 'student@svvv.in' : 'admin@svvv.in')}
                   </p>
                 </div>
                 <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
@@ -224,18 +239,22 @@ export default function DashboardLayout({
                 >
                   <div className="px-3 py-2 border-b border-slate-100">
                     <p className="text-xs font-bold text-slate-900">
-                      Campus Administrator
+                      {isStudent ? 'Campus Student (Ambassador)' : 'Campus Administrator'}
                     </p>
-                    <p className="text-[11px] text-slate-500">admin@svvv.in</p>
+                    <p className="text-[11px] text-slate-500">
+                      {session?.user?.email || (isStudent ? 'student@svvv.in' : 'admin@svvv.in')}
+                    </p>
                   </div>
-                  <Link
-                    href="/settings"
-                    onClick={() => setUserDropdownOpen(false)}
-                    className="flex items-center gap-2 px-3 py-2 text-xs text-slate-700 hover:bg-slate-50"
-                  >
-                    <Settings className="w-3.5 h-3.5" />
-                    <span>Platform Settings</span>
-                  </Link>
+                  {!isStudent && (
+                    <Link
+                      href="/settings"
+                      onClick={() => setUserDropdownOpen(false)}
+                      className="flex items-center gap-2 px-3 py-2 text-xs text-slate-700 hover:bg-slate-50"
+                    >
+                      <Settings className="w-3.5 h-3.5" />
+                      <span>Platform Settings</span>
+                    </Link>
+                  )}
                   <button
                     onClick={() => signOut({ callbackUrl: '/login' })}
                     className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-600 hover:bg-red-50 text-left cursor-pointer"

@@ -25,6 +25,19 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL(`/login?callbackUrl=${callbackUrl}`, request.url));
   }
 
+  // If admin tries to navigate to /report (which is student report-and-earn), send to /leaderboard
+  if (token.role === 'ADMIN' && pathname.startsWith('/report')) {
+    return NextResponse.redirect(new URL('/leaderboard', request.url));
+  }
+
+  // If student tries to navigate to admin-only areas, redirect to dashboard
+  if (token.role === 'STUDENT') {
+    const adminOnlyRoutes = ['/admin', '/upload', '/data', '/imports', '/analytics', '/settings'];
+    if (adminOnlyRoutes.some((route) => pathname.startsWith(route))) {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+  }
+
   return NextResponse.next();
 }
 
@@ -35,6 +48,9 @@ export const config = {
     '/login',
     '/dashboard/:path*',
     '/scan/:path*',
+    '/report/:path*',
+    '/leaderboard/:path*',
+    '/admin/:path*',
     '/rules/:path*',
     '/stations/:path*',
     '/upload/:path*',
