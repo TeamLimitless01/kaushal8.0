@@ -209,31 +209,28 @@ export default function HomePage() {
               <div className="flex items-center gap-1.5 bg-black/40 p-1 rounded-xl border border-white/10">
                 <button
                   onClick={() => setActiveTab('overview')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                    activeTab === 'overview'
-                      ? 'bg-emerald-500/30 text-emerald-200 border border-emerald-500/40 shadow-sm'
-                      : 'text-white/60 hover:text-white'
-                  }`}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${activeTab === 'overview'
+                    ? 'bg-emerald-500/30 text-emerald-200 border border-emerald-500/40 shadow-sm'
+                    : 'text-white/60 hover:text-white'
+                    }`}
                 >
                   Resource Telemetry
                 </button>
                 <button
                   onClick={() => setActiveTab('anomalies')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                    activeTab === 'anomalies'
-                      ? 'bg-emerald-500/30 text-emerald-200 border border-emerald-500/40 shadow-sm'
-                      : 'text-white/60 hover:text-white'
-                  }`}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${activeTab === 'anomalies'
+                    ? 'bg-emerald-500/30 text-emerald-200 border border-emerald-500/40 shadow-sm'
+                    : 'text-white/60 hover:text-white'
+                    }`}
                 >
                   Anomaly Radar
                 </button>
                 <button
                   onClick={() => setActiveTab('simulation')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                    activeTab === 'simulation'
-                      ? 'bg-emerald-500/30 text-emerald-200 border border-emerald-500/40 shadow-sm'
-                      : 'text-white/60 hover:text-white'
-                  }`}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${activeTab === 'simulation'
+                    ? 'bg-emerald-500/30 text-emerald-200 border border-emerald-500/40 shadow-sm'
+                    : 'text-white/60 hover:text-white'
+                    }`}
                 >
                   What-If Simulator
                 </button>
