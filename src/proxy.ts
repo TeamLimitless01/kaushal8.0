@@ -1,8 +1,8 @@
 import { withAuth } from 'next-auth/middleware';
 import { NextResponse } from 'next/server';
 
-export default withAuth(
-  function middleware(req) {
+export const proxy = withAuth(
+  function proxy() {
     return NextResponse.next();
   },
   {
@@ -12,8 +12,11 @@ export default withAuth(
     pages: {
       signIn: '/login',
     },
+    secret: process.env.NEXTAUTH_SECRET || 'ecosentinel-hackathon-svvv-secret-2026-supersecure-jwt-key',
   }
 );
+
+export default proxy;
 
 export const config = {
   matcher: [

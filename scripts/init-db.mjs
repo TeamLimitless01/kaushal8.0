@@ -121,10 +121,91 @@ async function init() {
       );
     `;
 
-    // Create indexes
-    await sql`CREATE INDEX IF NOT EXISTS "resource_usages_recordedDate_idx" ON resource_usages("recordedDate");`;
-    await sql`CREATE INDEX IF NOT EXISTS "resource_usages_resourceType_idx" ON resource_usages("resourceType");`;
-    await sql`CREATE INDEX IF NOT EXISTS "resource_usages_buildingId_idx" ON resource_usages("buildingId");`;
+    // Ensure Role enum contains USER
+    await sql`
+      DO $$ BEGIN
+        ALTER TYPE "Role" ADD VALUE IF NOT EXISTS 'USER';
+      EXCEPTION
+        WHEN others THEN null;
+      END $$;
+    `;
+
+    // Create WasteCategory enum
+    await sql`
+      DO $$ BEGIN
+        CREATE TYPE "WasteCategory" AS ENUM ('RECYCLABLE_DRY', 'ORGANIC_WET', 'HAZARDOUS', 'E_WASTE', 'LANDFILL_RESIDUAL', 'SPECIAL_HANDLING');
+      EXCEPTION
+        WHEN duplicate_object THEN null;
+      END $$;
+    `;
+
+    // Create BinType enum
+    await sql`
+      DO $$ BEGIN
+        CREATE TYPE "BinType" AS ENUM ('BLUE_RECYCLABLE', 'GREEN_ORGANIC', 'RED_HAZARDOUS', 'YELLOW_EWASTE', 'BLACK_LANDFILL');
+      EXCEPTION
+        WHEN duplicate_object THEN null;
+      END $$;
+    `;
+
+    // Create waste_rules table
+    await sql`
+      CREATE TABLE IF NOT EXISTS waste_rules (
+        id TEXT PRIMARY KEY,
+        "itemName" TEXT UNIQUE NOT NULL,
+        aliases TEXT[] NOT NULL DEFAULT '{}',
+        category "WasteCategory" NOT NULL,
+        "primaryBin" "BinType" NOT NULL,
+        material TEXT NOT NULL,
+        "prepInstructions" TEXT[] NOT NULL DEFAULT '{}',
+        "disposalLocation" TEXT NOT NULL DEFAULT 'Campus Quad Waste Stations',
+        "isHazardous" BOOLEAN NOT NULL DEFAULT false,
+        "hazardousWarning" TEXT,
+        "requiresClarification" BOOLEAN NOT NULL DEFAULT false,
+        "clarificationQuestion" TEXT,
+        "clarificationOptions" JSONB,
+        "searchKeywords" TEXT[] NOT NULL DEFAULT '{}',
+        "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+    `;
+
+    // Create waste_stations table
+    await sql`
+      CREATE TABLE IF NOT EXISTS waste_stations (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        location TEXT NOT NULL,
+        "availableBins" TEXT[] NOT NULL DEFAULT ARRAY['BLUE_RECYCLABLE', 'GREEN_ORGANIC', 'BLACK_LANDFILL'],
+        "hasEwasteDrop" BOOLEAN NOT NULL DEFAULT false,
+        "hasBatteryDrop" BOOLEAN NOT NULL DEFAULT false,
+        "qrCodeData" TEXT NOT NULL,
+        "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+    `;
+
+    // Create waste_scans table
+    await sql`
+      CREATE TABLE IF NOT EXISTS waste_scans (
+        id TEXT PRIMARY KEY,
+        "userId" TEXT REFERENCES users(id) ON DELETE SET NULL,
+        "stationId" TEXT REFERENCES waste_stations(id) ON DELETE SET NULL,
+        "imageUrl" TEXT,
+        "detectedItem" TEXT NOT NULL,
+        "detectedCategory" TEXT NOT NULL,
+        "confidenceScore" DOUBLE PRECISION NOT NULL,
+        "wasClarified" BOOLEAN NOT NULL DEFAULT false,
+        "userClarification" TEXT,
+        "finalBinRecommended" TEXT NOT NULL,
+        "feedbackStatus" TEXT,
+        "feedbackComment" TEXT,
+        "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+    `;
+
+    await sql`CREATE INDEX IF NOT EXISTS "waste_scans_createdAt_idx" ON waste_scans("createdAt");`;
+    await sql`CREATE INDEX IF NOT EXISTS "waste_scans_userId_idx" ON waste_scans("userId");`;
 
     console.log("All tables, constraints, and indexes created successfully on Neon PostgreSQL!");
   } catch (err) {

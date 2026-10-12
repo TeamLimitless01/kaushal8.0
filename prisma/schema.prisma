@@ -11,6 +11,24 @@ enum Role {
   ADMIN
   MANAGER
   VIEWER
+  USER
+}
+
+enum WasteCategory {
+  RECYCLABLE_DRY
+  ORGANIC_WET
+  HAZARDOUS
+  E_WASTE
+  LANDFILL_RESIDUAL
+  SPECIAL_HANDLING
+}
+
+enum BinType {
+  BLUE_RECYCLABLE
+  GREEN_ORGANIC
+  RED_HAZARDOUS
+  YELLOW_EWASTE
+  BLACK_LANDFILL
 }
 
 enum ResourceType {
@@ -27,14 +45,15 @@ enum ImportStatus {
 }
 
 model User {
-  id           String    @id @default(cuid())
+  id           String      @id @default(cuid())
   name         String?
-  email        String    @unique
+  email        String      @unique
   passwordHash String
-  role         Role      @default(ADMIN)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  role         Role        @default(ADMIN)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
   imports      Import[]
+  scans        WasteScan[]
 
   @@map("users")
 }
@@ -125,4 +144,62 @@ model ResourceUsage {
   @@index([resourceType])
   @@index([buildingId])
   @@map("resource_usages")
+}
+
+model WasteRule {
+  id                    String        @id @default(cuid())
+  itemName              String        @unique
+  aliases               String[]      @default([])
+  category              WasteCategory
+  primaryBin            BinType
+  material              String
+  prepInstructions      String[]      @default([])
+  disposalLocation      String        @default("Campus Quad Waste Stations")
+  isHazardous           Boolean       @default(false)
+  hazardousWarning      String?
+  requiresClarification Boolean       @default(false)
+  clarificationQuestion String?
+  clarificationOptions  Json?
+  searchKeywords        String[]      @default([])
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  @@map("waste_rules")
+}
+
+model WasteStation {
+  id             String      @id
+  name           String
+  location       String
+  availableBins  String[]    @default(["BLUE_RECYCLABLE", "GREEN_ORGANIC", "BLACK_LANDFILL"])
+  hasEwasteDrop  Boolean     @default(false)
+  hasBatteryDrop Boolean     @default(false)
+  qrCodeData     String
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  scans          WasteScan[]
+
+  @@map("waste_stations")
+}
+
+model WasteScan {
+  id                  String        @id @default(cuid())
+  userId              String?
+  user                User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  stationId           String?
+  station             WasteStation? @relation(fields: [stationId], references: [id], onDelete: SetNull)
+  imageUrl            String?
+  detectedItem        String
+  detectedCategory    String
+  confidenceScore     Float
+  wasClarified        Boolean       @default(false)
+  userClarification   String?
+  finalBinRecommended String
+  feedbackStatus      String?
+  feedbackComment     String?
+  createdAt           DateTime      @default(now())
+
+  @@index([createdAt])
+  @@index([userId])
+  @@map("waste_scans")
 }
