@@ -138,18 +138,38 @@ export default function LoginPage() {
             </div>
           </form>
 
-          {/* Quick Demo Fill Button */}
-          <div className="mt-6 pt-5 border-t border-slate-100">
-            <button
-              type="button"
-              onClick={handleQuickFill}
-              className="w-full flex items-center justify-center gap-2 py-2 px-3 text-xs font-medium text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80 rounded-xl transition cursor-pointer"
-            >
-              <KeyRound className="w-3.5 h-3.5 text-emerald-600" />
-              <span>
-                Demo Quick Fill: <strong>admin@svvv.in</strong> / <strong>admin</strong>
-              </span>
-            </button>
+          {/* Quick Demo Fill Buttons */}
+          <div className="mt-6 pt-5 border-t border-slate-100 space-y-2">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block text-center">
+              One-Click Demo Logins:
+            </span>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail('admin@svvv.in');
+                  setPassword('admin');
+                  setError(null);
+                }}
+                className="flex flex-col items-center justify-center p-2 text-xs font-medium text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80 rounded-xl transition cursor-pointer"
+              >
+                <span className="font-bold">Administrator</span>
+                <span className="text-[10px] text-slate-500 font-mono">admin@svvv.in</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail('student@svvv.in');
+                  setPassword('student');
+                  setError(null);
+                }}
+                className="flex flex-col items-center justify-center p-2 text-xs font-medium text-teal-800 bg-teal-50 hover:bg-teal-100 border border-teal-200/80 rounded-xl transition cursor-pointer"
+              >
+                <span className="font-bold">Campus Student</span>
+                <span className="text-[10px] text-slate-500 font-mono">student@svvv.in</span>
+              </button>
+            </div>
           </div>
         </div>
 

@@ -18,18 +18,25 @@ import {
   X,
   Building2,
   CheckCircle2,
-  ExternalLink,
   ChevronDown,
+  Camera,
+  BookOpen,
+  QrCode,
+  Sparkles,
 } from 'lucide-react';
 
 interface NavItem {
   name: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
+  badge?: string;
 }
 
 const NAV_ITEMS: NavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'AI Waste Classifier', href: '/scan', icon: Camera, badge: 'AI' },
+  { name: 'Campus Rules', href: '/rules', icon: BookOpen },
+  { name: 'Waste Stations & QR', href: '/stations', icon: QrCode },
   { name: 'Data Explorer', href: '/data', icon: Database },
   { name: 'Imports', href: '/imports', icon: History },
   { name: 'Analytics', href: '/analytics', icon: TrendingUp },
@@ -87,14 +94,23 @@ export default function DashboardLayout({
             </div>
           </div>
 
-          {/* Quick Upload CTA in Sidebar */}
-          <div className="px-4 pt-4 pb-2">
+          {/* Quick CTAs in Sidebar */}
+          <div className="px-4 pt-4 pb-2 space-y-1.5">
             <Link
-              href="/upload"
+              href="/scan"
               onClick={() => setMobileMenuOpen(false)}
               className="w-full flex items-center justify-center gap-2 py-2 px-3 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-sm transition"
             >
-              <UploadCloud className="w-4 h-4" />
+              <Camera className="w-4 h-4" />
+              <span>AI Waste Classifier</span>
+            </Link>
+
+            <Link
+              href="/upload"
+              onClick={() => setMobileMenuOpen(false)}
+              className="w-full flex items-center justify-center gap-2 py-1.5 px-3 text-[11px] font-semibold text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-xl transition"
+            >
+              <UploadCloud className="w-3.5 h-3.5 text-slate-500" />
               <span>Import Dataset</span>
             </Link>
           </div>
@@ -112,16 +128,24 @@ export default function DashboardLayout({
                   key={item.name}
                   href={item.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition ${isActive
+                  className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition ${isActive
                     ? 'bg-emerald-50 text-emerald-800 font-semibold shadow-xs'
                     : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'
                     }`}
                 >
-                  <Icon
-                    className={`w-4 h-4 ${isActive ? 'text-emerald-600' : 'text-slate-400'
-                      }`}
-                  />
-                  <span>{item.name}</span>
+                  <div className="flex items-center gap-3">
+                    <Icon
+                      className={`w-4 h-4 ${isActive ? 'text-emerald-600' : 'text-slate-400'
+                        }`}
+                    />
+                    <span>{item.name}</span>
+                  </div>
+
+                  {item.badge && (
+                    <span className="px-1.5 py-0.5 rounded-md text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                      {item.badge}
+                    </span>
+                  )}
                 </Link>
               );
             })}
