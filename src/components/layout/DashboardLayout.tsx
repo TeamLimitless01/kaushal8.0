@@ -142,10 +142,10 @@ export default function DashboardLayout({
               </span>
             </div>
             <p className="text-[11px] text-slate-500">Indore, Madhya Pradesh</p>
-            <div className="pt-1 flex items-center gap-1 text-[10px] text-emerald-800 font-medium">
+            {/* <div className="pt-1 flex items-center gap-1 text-[10px] text-emerald-800 font-medium">
               <CheckCircle2 className="w-3 h-3 text-emerald-600" />
               <span>Neon PostgreSQL Connected</span>
-            </div>
+            </div> */}
           </div>
         </div>
       </aside>

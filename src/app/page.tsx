@@ -116,7 +116,7 @@ export default function HomePage() {
       {/* Hero Section */}
       <main className="relative z-20 w-full max-w-6xl mx-auto px-6 py-12 md:py-20 flex flex-col items-center text-center">
         {/* Campus Live Pulse Pill */}
-        <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-emerald-950/80 border border-emerald-500/30 backdrop-blur-xl mb-6 shadow-2xl ring-1 ring-emerald-500/20">
+        {/* <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-emerald-950/80 border border-emerald-500/30 backdrop-blur-xl mb-6 shadow-2xl ring-1 ring-emerald-500/20">
           <span className="relative flex h-2.5 w-2.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 shadow-sm shadow-emerald-400" />
@@ -124,7 +124,7 @@ export default function HomePage() {
           <span className="text-xs font-semibold text-emerald-300 tracking-wide">
             Shri Vaishnav Vidyapeeth Vishwavidyalaya • Live Campus Green Grid
           </span>
-        </div>
+        </div> */}
 
         {/* Hero Headline */}
         <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tight leading-[1.05] text-white font-heading">
@@ -306,8 +306,8 @@ export default function HomePage() {
                 <div
                   onClick={() => setSelectedCircuit('blockB')}
                   className={`p-3.5 rounded-xl border cursor-pointer transition-all ${selectedCircuit === 'blockB'
-                      ? 'bg-emerald-950/40 border-emerald-500/40 ring-1 ring-emerald-500/20'
-                      : 'bg-white/5 border-white/10 hover:bg-white/10'
+                    ? 'bg-emerald-950/40 border-emerald-500/40 ring-1 ring-emerald-500/20'
+                    : 'bg-white/5 border-white/10 hover:bg-white/10'
                     }`}
                 >
                   <div className="flex items-center justify-between text-xs font-bold text-white">
@@ -326,8 +326,8 @@ export default function HomePage() {
                 <div
                   onClick={() => setSelectedCircuit('library')}
                   className={`p-3.5 rounded-xl border cursor-pointer transition-all ${selectedCircuit === 'library'
-                      ? 'bg-emerald-950/40 border-emerald-500/40 ring-1 ring-emerald-500/20'
-                      : 'bg-white/5 border-white/10 hover:bg-white/10'
+                    ? 'bg-emerald-950/40 border-emerald-500/40 ring-1 ring-emerald-500/20'
+                    : 'bg-white/5 border-white/10 hover:bg-white/10'
                     }`}
                 >
                   <div className="flex items-center justify-between text-xs font-bold text-white">
@@ -346,8 +346,8 @@ export default function HomePage() {
                 <div
                   onClick={() => setSelectedCircuit('workshop')}
                   className={`p-3.5 rounded-xl border cursor-pointer transition-all ${selectedCircuit === 'workshop'
-                      ? 'bg-emerald-950/40 border-emerald-500/40 ring-1 ring-emerald-500/20'
-                      : 'bg-white/5 border-white/10 hover:bg-white/10'
+                    ? 'bg-emerald-950/40 border-emerald-500/40 ring-1 ring-emerald-500/20'
+                    : 'bg-white/5 border-white/10 hover:bg-white/10'
                     }`}
                 >
                   <div className="flex items-center justify-between text-xs font-bold text-white">
@@ -818,8 +818,8 @@ export default function HomePage() {
                 <button
                   onClick={() => setActiveTab('overview')}
                   className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${activeTab === 'overview'
-                      ? 'bg-emerald-500/30 text-emerald-200 border border-emerald-500/40 shadow-sm'
-                      : 'text-white/60 hover:text-white'
+                    ? 'bg-emerald-500/30 text-emerald-200 border border-emerald-500/40 shadow-sm'
+                    : 'text-white/60 hover:text-white'
                     }`}
                 >
                   Resource Telemetry
@@ -827,8 +827,8 @@ export default function HomePage() {
                 <button
                   onClick={() => setActiveTab('anomalies')}
                   className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${activeTab === 'anomalies'
-                      ? 'bg-emerald-500/30 text-emerald-200 border border-emerald-500/40 shadow-sm'
-                      : 'text-white/60 hover:text-white'
+                    ? 'bg-emerald-500/30 text-emerald-200 border border-emerald-500/40 shadow-sm'
+                    : 'text-white/60 hover:text-white'
                     }`}
                 >
                   Green Alerts
@@ -836,8 +836,8 @@ export default function HomePage() {
                 <button
                   onClick={() => setActiveTab('simulation')}
                   className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${activeTab === 'simulation'
-                      ? 'bg-emerald-500/30 text-emerald-200 border border-emerald-500/40 shadow-sm'
-                      : 'text-white/60 hover:text-white'
+                    ? 'bg-emerald-500/30 text-emerald-200 border border-emerald-500/40 shadow-sm'
+                    : 'text-white/60 hover:text-white'
                     }`}
                 >
                   Student Pledge Model

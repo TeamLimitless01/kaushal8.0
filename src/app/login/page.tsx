@@ -78,7 +78,7 @@ export default function LoginPage() {
                 htmlFor="email"
                 className="block text-xs font-semibold text-slate-700 uppercase tracking-wider"
               >
-                Campus Email
+                Campus Email Address
               </label>
               <div className="mt-1.5">
                 <input
