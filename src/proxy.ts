@@ -47,6 +47,7 @@ export const config = {
   matcher: [
     '/login',
     '/dashboard/:path*',
+    '/iot/:path*',
     '/scan/:path*',
     '/report/:path*',
     '/leaderboard/:path*',
