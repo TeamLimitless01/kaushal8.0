@@ -21,6 +21,9 @@ export default proxy;
 export const config = {
   matcher: [
     '/dashboard/:path*',
+    '/scan/:path*',
+    '/rules/:path*',
+    '/stations/:path*',
     '/upload/:path*',
     '/data/:path*',
     '/imports/:path*',
