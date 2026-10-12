@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { WebGLShader } from '@/components/ui/web-gl-shader';
 import { LiquidButton, MetalButton } from '@/components/ui/liquid-glass-button';
+import TiltedGridHeroDemo from '@/components/ui/tilted-grid-hero-demo';
 import {
   Leaf,
   ShieldCheck,
@@ -193,6 +194,11 @@ export default function HomePage() {
             <p className="text-[11px] text-emerald-200/60 mt-0.5">Indore campus facility</p>
           </div>
         </div>
+
+        {/* 3D Tilted Grid Hero Gallery Feature Showcase */}
+        <section className="mt-16 w-full">
+          <TiltedGridHeroDemo />
+        </section>
 
         {/* Interactive Showcase Preview */}
         <section id="demo-preview" className="mt-16 w-full text-left">
