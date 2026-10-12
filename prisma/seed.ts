@@ -43,13 +43,13 @@ async function main() {
     update: {
       name: 'Aarav Sharma (Student Ambassador)',
       passwordHash: studentPassword,
-      role: 'USER',
+      role: 'STUDENT',
     },
     create: {
       name: 'Aarav Sharma (Student Ambassador)',
       email: 'student@svvv.in',
       passwordHash: studentPassword,
-      role: 'USER',
+      role: 'STUDENT',
     },
   });
   console.log("✓ Campus Student user verified:", student.email);

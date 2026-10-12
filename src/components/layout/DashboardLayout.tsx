@@ -35,8 +35,8 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'AI Waste Classifier', href: '/scan', icon: Camera, badge: 'AI' },
-  { name: 'Campus Rules', href: '/rules', icon: BookOpen },
-  { name: 'Waste Stations & QR', href: '/stations', icon: QrCode },
+  // { name: 'Campus Rules', href: '/rules', icon: BookOpen },
+  // { name: 'Waste Stations & QR', href: '/stations', icon: QrCode },
   { name: 'Data Explorer', href: '/data', icon: Database },
   { name: 'Imports', href: '/imports', icon: History },
   { name: 'Analytics', href: '/analytics', icon: TrendingUp },

@@ -13,7 +13,7 @@ const pool = new Pool({ connectionString: match[1] });
 async function fixCredentials() {
   try {
     const adminHash = await bcrypt.hash('admin', 10);
-    const studentHash = await bcrypt.hash('student123', 10);
+    const studentHash = await bcrypt.hash('student', 10);
 
     // Update admin
     await pool.query(

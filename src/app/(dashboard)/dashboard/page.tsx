@@ -7,9 +7,18 @@ import AnomalySection from '@/components/dashboard/AnomalySection';
 import WhatIfSimulator from '@/components/dashboard/WhatIfSimulator';
 import DashboardCharts from '@/components/dashboard/DashboardCharts';
 import Link from 'next/link';
-import { UploadCloud, Calendar, Database, ShieldCheck } from 'lucide-react';
+import {
+  UploadCloud,
+  Calendar,
+  Database,
+  ShieldCheck,
+  Activity,
+  ArrowRight,
+  TrendingUp,
+  Download,
+  Building,
+} from 'lucide-react';
 import { ResourceType } from '@prisma/client';
-
 
 interface PageProps {
   searchParams: Promise<{
@@ -40,41 +49,64 @@ export default async function DashboardPage({ searchParams }: PageProps) {
     resourceType,
   });
 
-  // If no campus data exists, show the polished Onboarding Empty State (Section 6)
+  // If no campus data exists, show the polished Onboarding Empty State
   if (!data.hasData) {
     return <OnboardingEmptyState />;
   }
 
   return (
-    <div className="space-y-6">
-      {/* Top Header & Context */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-7 pb-10">
+      {/* Top Header & Telemetry Context */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white/95 backdrop-blur-xs p-6 rounded-3xl border border-slate-200/90 shadow-xs">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900">
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="flex h-2.5 w-2.5 relative">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+            </span>
+            <span className="text-xs font-bold uppercase tracking-wider text-emerald-800">
+              SVVV Indore • Real-Time Telemetry Stream
+            </span>
+          </div>
+
+          <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
             Campus Sustainability Intelligence
           </h2>
-          <div className="flex flex-wrap items-center gap-2 mt-1 text-xs text-slate-500">
-            <span>SVVV Campus, Indore</span>
+
+          <div className="flex flex-wrap items-center gap-2 mt-2 text-xs text-slate-500">
+            <span className="font-semibold text-slate-700 flex items-center gap-1">
+              <Building className="w-3.5 h-3.5 text-slate-400" />
+              Main Campus (Ujjain Road, Indore)
+            </span>
             <span>•</span>
-            <span className="flex items-center gap-1 font-medium text-slate-700">
+            <span className="flex items-center gap-1 font-medium text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md">
               <Calendar className="w-3.5 h-3.5 text-slate-400" />
               {data.dateRange.start} → {data.dateRange.end}
             </span>
             <span>•</span>
-            <span className="flex items-center gap-1 text-emerald-800 font-medium">
+            <span className="flex items-center gap-1 text-emerald-800 font-semibold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/60">
               <Database className="w-3.5 h-3.5 text-emerald-600" />
-              {data.totalRecordsCount.toLocaleString()} normalized records
+              {data.totalRecordsCount.toLocaleString()} normalized observations
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        {/* Action Triggers */}
+        <div className="flex flex-wrap items-center gap-2.5 self-start lg:self-auto">
+          <Link
+            href="/data"
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 transition shadow-xs cursor-pointer"
+          >
+            <Database className="w-3.5 h-3.5 text-slate-500" />
+            <span>Data Explorer</span>
+          </Link>
+
           <Link
             href="/upload"
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 transition shadow-xs"
+            className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-2xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 transition shadow-md shadow-emerald-600/20 cursor-pointer"
           >
-            <UploadCloud className="w-3.5 h-3.5" />
-            <span>Upload More Data</span>
+            <UploadCloud className="w-4 h-4" />
+            <span>Upload New Dataset</span>
           </Link>
         </div>
       </div>
@@ -94,7 +126,16 @@ export default async function DashboardPage({ searchParams }: PageProps) {
         }}
       />
 
-      {/* Primary KPI & Sustainability Score Section */}
+      {/* CHARTS AND GRAPHS MOVED TO TOP SIDE */}
+      {/* Dynamic Visualizations: Temporal Trajectory, Expenditure Share, Building Hierarchy & Peak Spikes */}
+      <DashboardCharts
+        consumptionOverTime={data.charts.consumptionOverTime}
+        buildingComparison={data.charts.buildingComparison}
+        resourceDistribution={data.charts.resourceDistribution}
+        peakDays={data.charts.peakDays}
+      />
+
+      {/* Primary KPI & Campus Sustainability Score Section */}
       <KpiCards
         energy={data.kpis.energy}
         water={data.kpis.water}
@@ -110,14 +151,6 @@ export default async function DashboardPage({ searchParams }: PageProps) {
 
       {/* Interactive 'What If?' Optimization Simulator */}
       <WhatIfSimulator baselineElectricityKwh={data.kpis.energy.value} />
-
-      {/* Dynamic Visualizations: Timeline, Buildings, Expenditure Share */}
-      <DashboardCharts
-        consumptionOverTime={data.charts.consumptionOverTime}
-        buildingComparison={data.charts.buildingComparison}
-        resourceDistribution={data.charts.resourceDistribution}
-        peakDays={data.charts.peakDays}
-      />
     </div>
   );
 }
