@@ -106,7 +106,7 @@ export default function IotDashboardPage() {
 
   // Streaming controls
   const [isStreaming, setIsStreaming] = useState(true);
-  const [streamSpeed, setStreamSpeed] = useState<number>(1500); // ms per tick
+  const [streamSpeed, setStreamSpeed] = useState<number>(1000); // ms per tick
   const [activeAnomaly, setActiveAnomaly] = useState<'none' | 'power_surge' | 'water_burst' | 'bin_overflow'>('none');
   const [dispatchToast, setDispatchToast] = useState<string | null>(null);
 
@@ -775,25 +775,7 @@ export default function IotDashboardPage() {
           {/* Flex & Presentation Live Controls */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 bg-slate-800/80 backdrop-blur-md p-3 rounded-2xl border border-slate-700/60 shadow-lg">
             {/* Play/Pause Button */}
-            <button
-              onClick={() => setIsStreaming(!isStreaming)}
-              className={`flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition shadow-sm ${isStreaming
-                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30'
-                : 'bg-emerald-500 text-slate-950 font-extrabold hover:bg-emerald-400'
-                }`}
-            >
-              {isStreaming ? (
-                <>
-                  <Pause className="w-3.5 h-3.5 fill-current" />
-                  <span>Pause Stream</span>
-                </>
-              ) : (
-                <>
-                  <Play className="w-3.5 h-3.5 fill-current" />
-                  <span>Resume Live</span>
-                </>
-              )}
-            </button>
+
 
             {/* Speed Multiplier */}
             {/* <div className="flex items-center bg-slate-900/80 rounded-xl p-1 border border-slate-700/80 text-xs">
