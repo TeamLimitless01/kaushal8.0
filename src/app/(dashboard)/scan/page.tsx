@@ -417,8 +417,8 @@ export default function WasteScannerPage() {
                   handleRetake();
                 }}
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl transition cursor-pointer ${mode === 'camera'
-                    ? 'bg-white text-slate-900 shadow-xs'
-                    : 'hover:text-slate-900'
+                  ? 'bg-white text-slate-900 shadow-xs'
+                  : 'hover:text-slate-900'
                   }`}
               >
                 <Camera className="w-4 h-4 text-emerald-600" />
@@ -430,8 +430,8 @@ export default function WasteScannerPage() {
                   handleRetake();
                 }}
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl transition cursor-pointer ${mode === 'upload'
-                    ? 'bg-white text-slate-900 shadow-xs'
-                    : 'hover:text-slate-900'
+                  ? 'bg-white text-slate-900 shadow-xs'
+                  : 'hover:text-slate-900'
                   }`}
               >
                 <Upload className="w-4 h-4 text-emerald-600" />
@@ -649,8 +649,8 @@ export default function WasteScannerPage() {
               {classification.station && (
                 <div
                   className={`p-3.5 rounded-2xl border text-xs flex items-center justify-between gap-3 ${classification.station.isBinAvailableAtStation
-                      ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-                      : 'bg-amber-50 border-amber-200 text-amber-800'
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                    : 'bg-amber-50 border-amber-200 text-amber-800'
                     }`}
                 >
                   <div className="flex items-center gap-2">
@@ -715,8 +715,8 @@ export default function WasteScannerPage() {
                             onClick={() => handleClarificationSelect(opt.id)}
                             disabled={clarificationSubmitting}
                             className={`p-3 rounded-2xl border text-left transition cursor-pointer flex flex-col justify-between ${isSelected
-                                ? 'bg-white border-amber-500 shadow-xs ring-2 ring-amber-400'
-                                : 'bg-white/80 hover:bg-white border-slate-200'
+                              ? 'bg-white border-amber-500 shadow-xs ring-2 ring-amber-400'
+                              : 'bg-white/80 hover:bg-white border-slate-200'
                               }`}
                           >
                             <span className="font-bold text-xs text-slate-900">{opt.label}</span>
@@ -772,8 +772,8 @@ export default function WasteScannerPage() {
                       <button
                         onClick={() => handleFeedback('HELPFUL')}
                         className={`p-1.5 rounded-lg border text-xs transition cursor-pointer ${feedbackGiven === 'HELPFUL'
-                            ? 'bg-emerald-600 text-white border-emerald-600'
-                            : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'
+                          ? 'bg-emerald-600 text-white border-emerald-600'
+                          : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'
                           }`}
                         title="Yes, accurate"
                       >
@@ -782,8 +782,8 @@ export default function WasteScannerPage() {
                       <button
                         onClick={() => handleFeedback('INCORRECT_BIN')}
                         className={`p-1.5 rounded-lg border text-xs transition cursor-pointer ${feedbackGiven === 'INCORRECT_BIN'
-                            ? 'bg-red-600 text-white border-red-600'
-                            : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'
+                          ? 'bg-red-600 text-white border-red-600'
+                          : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'
                           }`}
                         title="Wrong bin"
                       >
