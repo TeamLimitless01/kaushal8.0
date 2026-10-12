@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/db/prisma';
 import { ValidResourceRow } from '@/lib/csv/parser';
-import { ImportStatus } from '@prisma/client';
+import { ImportStatus, ResourceType } from '@prisma/client';
 
 export interface ProcessImportParams {
   campusId?: string;
@@ -83,7 +83,7 @@ export async function processAndStoreImport(
   let skippedCount = 0;
 
   try {
-    // Cache buildings and rooms to minimize DB roundtrips
+    // 3. Cache and resolve buildings
     const existingBuildings = await prisma.building.findMany({
       where: { campusId },
       include: { rooms: true },
@@ -132,73 +132,123 @@ export async function processAndStoreImport(
       }
     }
 
-    // Process rows in chunks of 50 to maintain clean transactions
-    const CHUNK_SIZE = 50;
-    for (let i = 0; i < validRows.length; i += CHUNK_SIZE) {
-      const chunk = validRows.slice(i, i + CHUNK_SIZE);
+    // 4. Batch query existing records in date range to prevent slow roundtrips
+    const existingRecords = await prisma.resourceUsage.findMany({
+      where: {
+        campusId,
+        recordedDate: {
+          gte: new Date(`${minDateStr}T00:00:00.000Z`),
+          lte: new Date(`${maxDateStr}T00:00:00.000Z`),
+        },
+      },
+    });
 
-      await prisma.$transaction(async (tx) => {
-        for (const row of chunk) {
-          const buildingId = buildingMap.get(row.building.trim().toLowerCase())!;
-          const roomId = roomMap.get(`${buildingId}_${row.room.trim().toLowerCase()}`) ||
-                         roomMap.get(`${buildingId}_general`)!;
-          const recordedDate = new Date(`${row.date}T00:00:00.000Z`);
-
-          // Check if record exists
-          const existing = await tx.resourceUsage.findUnique({
-            where: {
-              campusId_buildingId_roomId_resourceType_recordedDate: {
-                campusId,
-                buildingId,
-                roomId,
-                resourceType: row.resource,
-                recordedDate,
-              },
-            },
-          });
-
-          if (existing) {
-            // If identical usage, record as skipped or update import link
-            if (
-              existing.usage === row.usage &&
-              existing.operatingHours === row.operatingHours
-            ) {
-              skippedCount++;
-            } else {
-              // Update with newest reading
-              await tx.resourceUsage.update({
-                where: { id: existing.id },
-                data: {
-                  usage: row.usage,
-                  unit: row.unit,
-                  operatingHours: row.operatingHours,
-                  importId: importRecord.id,
-                },
-              });
-              updatedCount++;
-            }
-          } else {
-            // Insert new record
-            await tx.resourceUsage.create({
-              data: {
-                campusId,
-                buildingId,
-                roomId,
-                resourceType: row.resource,
-                usage: row.usage,
-                unit: row.unit,
-                operatingHours: row.operatingHours,
-                recordedDate,
-                importId: importRecord.id,
-              },
-            });
-            insertedCount++;
-          }
-        }
-      });
+    // Map: `${buildingId}_${roomId}_${resourceType}_${dateStr}` -> record
+    const existingMap = new Map<string, typeof existingRecords[0]>();
+    for (const er of existingRecords) {
+      const dateStr = er.recordedDate.toISOString().split('T')[0];
+      const key = `${er.buildingId}_${er.roomId}_${er.resourceType}_${dateStr}`;
+      existingMap.set(key, er);
     }
 
-    // Mark import COMPLETED
+    const recordsToCreate: Array<{
+      campusId: string;
+      buildingId: string;
+      roomId: string;
+      resourceType: ResourceType;
+      usage: number;
+      unit: string;
+      operatingHours: number | null;
+      recordedDate: Date;
+      importId: string;
+    }> = [];
+
+    const recordsToUpdate: Array<{
+      id: string;
+      usage: number;
+      unit: string;
+      operatingHours: number | null;
+      importId: string;
+    }> = [];
+
+    // Deduplicate in-memory across the CSV rows
+    const processedKeys = new Set<string>();
+
+    for (const row of validRows) {
+      const buildingId = buildingMap.get(row.building.trim().toLowerCase())!;
+      const roomId =
+        roomMap.get(`${buildingId}_${row.room.trim().toLowerCase()}`) ||
+        roomMap.get(`${buildingId}_general`)!;
+      const rowKey = `${buildingId}_${roomId}_${row.resource}_${row.date}`;
+
+      if (processedKeys.has(rowKey)) {
+        skippedCount++;
+        continue;
+      }
+      processedKeys.add(rowKey);
+
+      const existing = existingMap.get(rowKey);
+      if (existing) {
+        if (
+          existing.usage === row.usage &&
+          existing.operatingHours === row.operatingHours
+        ) {
+          skippedCount++;
+        } else {
+          recordsToUpdate.push({
+            id: existing.id,
+            usage: row.usage,
+            unit: row.unit,
+            operatingHours: row.operatingHours,
+            importId: importRecord.id,
+          });
+          updatedCount++;
+        }
+      } else {
+        recordsToCreate.push({
+          campusId,
+          buildingId,
+          roomId,
+          resourceType: row.resource,
+          usage: row.usage,
+          unit: row.unit,
+          operatingHours: row.operatingHours,
+          recordedDate: new Date(`${row.date}T00:00:00.000Z`),
+          importId: importRecord.id,
+        });
+        insertedCount++;
+      }
+    }
+
+    // 5. High-performance bulk insert for new records
+    if (recordsToCreate.length > 0) {
+      // Chunk bulk inserts into batches of 250
+      const BATCH_SIZE = 250;
+      for (let i = 0; i < recordsToCreate.length; i += BATCH_SIZE) {
+        const batch = recordsToCreate.slice(i, i + BATCH_SIZE);
+        await prisma.resourceUsage.createMany({
+          data: batch,
+          skipDuplicates: true,
+        });
+      }
+    }
+
+    // 6. Update existing records
+    if (recordsToUpdate.length > 0) {
+      for (const item of recordsToUpdate) {
+        await prisma.resourceUsage.update({
+          where: { id: item.id },
+          data: {
+            usage: item.usage,
+            unit: item.unit,
+            operatingHours: item.operatingHours,
+            importId: item.importId,
+          },
+        });
+      }
+    }
+
+    // 7. Mark import COMPLETED
     const finalStatus =
       errorsOrWarningsPresent(validRows.length, totalCsvRows)
         ? ImportStatus.PARTIAL
@@ -247,20 +297,18 @@ function errorsOrWarningsPresent(validCount: number, totalCount: number): boolea
 }
 
 export async function deleteImport(importId: string) {
-  return prisma.$transaction(async (tx) => {
-    // Delete resource usages created by this import
-    const deletedUsages = await tx.resourceUsage.deleteMany({
-      where: { importId },
-    });
-
-    // Delete the import record
-    const deletedImport = await tx.import.delete({
-      where: { id: importId },
-    });
-
-    return {
-      deletedUsagesCount: deletedUsages.count,
-      deletedImport,
-    };
+  // Delete resource usages associated with this import batch
+  const deletedUsages = await prisma.resourceUsage.deleteMany({
+    where: { importId },
   });
+
+  // Delete the import record
+  const deletedImport = await prisma.import.delete({
+    where: { id: importId },
+  });
+
+  return {
+    deletedUsagesCount: deletedUsages.count,
+    deletedImport,
+  };
 }
