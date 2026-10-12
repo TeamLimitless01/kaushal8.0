@@ -3,10 +3,8 @@ import { PrismaNeon } from '@prisma/adapter-neon';
 import ws from 'ws';
 import { neonConfig } from '@neondatabase/serverless';
 
-// Ensure WebSockets work in Node.js runtime
-if (typeof WebSocket === 'undefined') {
-  neonConfig.webSocketConstructor = ws;
-}
+// Explicitly assign ws as webSocketConstructor for Node.js 22/24 environments
+neonConfig.webSocketConstructor = ws;
 
 const connectionString =
   process.env.DATABASE_URL ||
