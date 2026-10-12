@@ -16,6 +16,8 @@ import {
   CartesianGrid,
   Legend,
 } from 'recharts';
+import { useSession } from 'next-auth/react';
+import BuildingManagerModal, { ManagedBuilding } from '@/components/dashboard/BuildingManagerModal';
 import {
   Activity,
   Zap,
@@ -41,6 +43,7 @@ import {
   Clock,
   Send,
   Sparkles,
+  Pencil,
 } from 'lucide-react';
 
 // Time filter options
@@ -99,10 +102,15 @@ function formatTime(date: Date, includeSec = true): string {
 }
 
 export default function IotDashboardPage() {
+  const { data: session } = useSession();
+  const isAdmin = (session?.user as { role?: string })?.role === 'ADMIN';
+
   const [mounted, setMounted] = useState(false);
   const [activeMetric, setActiveMetric] = useState<ResourceMetric>('electricity');
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('realtime');
   const [chartMode, setChartMode] = useState<'rate' | 'cumulative'>('rate');
+  const [selectedBuildingId, setSelectedBuildingId] = useState<string>('all');
+  const [isBuildingModalOpen, setIsBuildingModalOpen] = useState(false);
 
   // Streaming controls
   const [isStreaming, setIsStreaming] = useState(true);
@@ -255,36 +263,71 @@ export default function IotDashboardPage() {
 
     async function loadDashboardBaseline() {
       try {
-        const res = await fetch('/api/dashboard');
-        if (res.ok) {
-          const data = await res.json();
-          if (data && data.hasData && data.kpis) {
-            setTotals({
-              electricityKwh: Math.round(data.kpis.energy?.value || 48250),
-              waterLiters: Math.round(data.kpis.water?.value || 320400),
-              wasteKg: Math.round(data.kpis.waste?.value || 1450),
-              costInr: Math.round(data.kpis.cost?.value || 395000),
-              sustainabilityScore: data.kpis.sustainabilityScore || 78,
-              co2Kg: Math.round(data.kpis.co2EmissionsKg || 39565),
-              potentialSavingsInr: Math.round(data.kpis.potentialSavingsInr || 59250),
-            });
+        const [dashRes, bldRes] = await Promise.all([
+          fetch('/api/dashboard'),
+          fetch('/api/buildings'),
+        ]);
 
-            if (data.charts?.buildingComparison && data.charts.buildingComparison.length > 0) {
-              const mapped = data.charts.buildingComparison.map((b: any, idx: number) => ({
-                id: b.buildingId || `b-${idx}`,
-                name: b.buildingName,
-                electricity: Math.round(b.electricity),
-                water: Math.round(b.water),
-                waste: Math.round(b.waste),
-                cost: Math.round(b.totalCost),
-                status: idx === 1 ? 'Elevated' : 'Optimal',
-                activeKw: Math.round((b.electricity / 400) * 10) / 10,
-                flowLpm: Math.round((b.water / 3500) * 10) / 10,
-                binPct: Math.round(Math.min(95, 30 + idx * 15)),
-              }));
-              setBuildings(mapped);
-            }
+        const dashData = dashRes.ok ? await dashRes.json() : null;
+        const bldData = bldRes.ok ? await bldRes.json() : null;
+
+        if (dashData && dashData.hasData && dashData.kpis) {
+          setTotals({
+            electricityKwh: Math.round(dashData.kpis.energy?.value || 48250),
+            waterLiters: Math.round(dashData.kpis.water?.value || 320400),
+            wasteKg: Math.round(dashData.kpis.waste?.value || 1450),
+            costInr: Math.round(dashData.kpis.cost?.value || 395000),
+            sustainabilityScore: dashData.kpis.sustainabilityScore || 78,
+            co2Kg: Math.round(dashData.kpis.co2EmissionsKg || 39565),
+            potentialSavingsInr: Math.round(dashData.kpis.potentialSavingsInr || 59250),
+          });
+        }
+
+        // Dynamically load all buildings from database
+        if (bldData && bldData.success && Array.isArray(bldData.buildings) && bldData.buildings.length > 0) {
+          const compMap = new Map();
+          if (dashData?.charts?.buildingComparison) {
+            dashData.charts.buildingComparison.forEach((bc: any) => {
+              compMap.set(bc.buildingId || bc.buildingName, bc);
+            });
           }
+
+          const dynamicBuildings = bldData.buildings.map((b: any, idx: number) => {
+            const match = compMap.get(b.id) || compMap.get(b.name);
+            const elec = match ? Math.round(match.electricity) : Math.round(6200 + (idx * 3100) % 14000);
+            const water = match ? Math.round(match.water) : Math.round(28000 + (idx * 16000) % 90000);
+            const waste = match ? Math.round(match.waste) : Math.round(110 + (idx * 85) % 450);
+            const cost = match ? Math.round(match.totalCost) : Math.round(elec * 8.2);
+
+            return {
+              id: b.id,
+              name: b.name,
+              electricity: elec,
+              water: water,
+              waste: waste,
+              cost: cost,
+              status: (idx === 1 ? 'Elevated' : 'Optimal') as 'Optimal' | 'Elevated' | 'Surging',
+              activeKw: Math.round((elec / 400) * 10) / 10,
+              flowLpm: Math.round((water / 3500) * 10) / 10,
+              binPct: Math.round(Math.min(95, 28 + (idx * 16) % 64)),
+            };
+          });
+
+          setBuildings(dynamicBuildings);
+        } else if (dashData?.charts?.buildingComparison && dashData.charts.buildingComparison.length > 0) {
+          const mapped = dashData.charts.buildingComparison.map((b: any, idx: number) => ({
+            id: b.buildingId || `b-${idx}`,
+            name: b.buildingName,
+            electricity: Math.round(b.electricity),
+            water: Math.round(b.water),
+            waste: Math.round(b.waste),
+            cost: Math.round(b.totalCost),
+            status: idx === 1 ? 'Elevated' : 'Optimal',
+            activeKw: Math.round((b.electricity / 400) * 10) / 10,
+            flowLpm: Math.round((b.water / 3500) * 10) / 10,
+            binPct: Math.round(Math.min(95, 30 + idx * 15)),
+          }));
+          setBuildings(mapped);
         }
       } catch (e) {
         console.warn('Using seeded dashboard telemetry baseline:', e);
@@ -1218,7 +1261,7 @@ export default function IotDashboardPage() {
 
       {/* Building-by-Building IoT Comparison Section (Live Bar Chart & Telemetry Status) */}
       <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-xs space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
               <div className="p-1.5 bg-emerald-50 rounded-lg text-emerald-600">
@@ -1233,16 +1276,45 @@ export default function IotDashboardPage() {
             </p>
           </div>
 
-          <span className="text-xs font-mono font-bold text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200 self-start sm:self-auto">
-            {buildings.length} Connected Facilities
-          </span>
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Building filter dropdown */}
+            <select
+              value={selectedBuildingId}
+              onChange={(e) => setSelectedBuildingId(e.target.value)}
+              className="text-xs font-semibold text-slate-800 bg-slate-50 hover:bg-white border border-slate-200/90 rounded-xl px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition cursor-pointer"
+            >
+              <option value="all">All SVVV Buildings ({buildings.length})</option>
+              {buildings.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.name}
+                </option>
+              ))}
+            </select>
+
+            {/* Admin Manage Buildings Button */}
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={() => setIsBuildingModalOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer shrink-0"
+                title="Admin: Add, Edit, Rename or Delete Campus Buildings"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+                <span>Manage Buildings</span>
+              </button>
+            )}
+
+            <span className="text-xs font-mono font-bold text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200">
+              {buildings.length} Connected Facilities
+            </span>
+          </div>
         </div>
 
         {/* Building Comparison Bar Chart */}
         <div className="h-64 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={buildings.map((b) => ({
+              data={(selectedBuildingId === 'all' ? buildings : buildings.filter((b) => b.id === selectedBuildingId)).map((b) => ({
                 name: b.name.replace(/ \(.*\)/, ''),
                 value:
                   activeMetric === 'electricity'
@@ -1300,7 +1372,7 @@ export default function IotDashboardPage() {
 
         {/* Live Facility Telemetry Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
-          {buildings.map((b) => (
+          {(selectedBuildingId === 'all' ? buildings : buildings.filter((b) => b.id === selectedBuildingId)).map((b) => (
             <div
               key={b.id}
               className={`p-4 rounded-2xl border transition-all ${b.status === 'Surging'
@@ -1355,6 +1427,37 @@ export default function IotDashboardPage() {
           ))}
         </div>
       </div>
+
+      {/* Admin Building Manager Modal */}
+      {isAdmin && (
+        <BuildingManagerModal
+          isOpen={isBuildingModalOpen}
+          onClose={() => setIsBuildingModalOpen(false)}
+          onBuildingsUpdated={(updated) => {
+            setBuildings((prev) => {
+              const prevMap = new Map(prev.map((p) => [p.id, p]));
+              return updated.map((ub, idx) => {
+                const existing = prevMap.get(ub.id);
+                if (existing) {
+                  return { ...existing, name: ub.name };
+                }
+                return {
+                  id: ub.id,
+                  name: ub.name,
+                  electricity: Math.round(6200 + ((idx * 3100) % 14000)),
+                  water: Math.round(28000 + ((idx * 16000) % 90000)),
+                  waste: Math.round(110 + ((idx * 85) % 450)),
+                  cost: Math.round(50840 + ((idx * 25420) % 114800)),
+                  status: 'Optimal' as const,
+                  activeKw: Math.round((6200 / 400) * 10) / 10,
+                  flowLpm: Math.round((28000 / 3500) * 10) / 10,
+                  binPct: Math.round(Math.min(95, 28 + ((idx * 16) % 64))),
+                };
+              });
+            });
+          }}
+        />
+      )}
 
       {/* Live MQTT / LoRaWAN Terminal Ingestion Stream */}
       <div className="bg-slate-950 border border-slate-800 rounded-3xl p-6 text-slate-300 shadow-2xl font-mono text-xs">

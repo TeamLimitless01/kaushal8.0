@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Settings, ShieldCheck, Database, Save, CheckCircle2, Building2, HelpCircle } from 'lucide-react';
+import { Settings, ShieldCheck, Database, Save, CheckCircle2, Building2, HelpCircle, Pencil } from 'lucide-react';
+import BuildingManagerModal from '@/components/dashboard/BuildingManagerModal';
 
 export default function SettingsPage() {
   const [elecRate, setElecRate] = useState('8.50');
@@ -11,6 +12,7 @@ export default function SettingsPage() {
   const [waterFactor, setWaterFactor] = useState('0.0003');
   const [wasteFactor, setWasteFactor] = useState('0.45');
   const [isSaved, setIsSaved] = useState(false);
+  const [isBuildingModalOpen, setIsBuildingModalOpen] = useState(false);
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -186,6 +188,29 @@ export default function SettingsPage() {
           </div>
         </div>
 
+        {/* Card 4: Campus Facilities & Buildings Management */}
+        <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-1">
+                Campus Buildings & Facility Management
+              </h4>
+              <p className="text-xs text-slate-500">
+                Register new blocks, rename existing facilities, or update infrastructure tracked in dashboard analytics & IoT telemetry.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsBuildingModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition shadow-xs cursor-pointer shrink-0"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              <span>Manage Buildings</span>
+            </button>
+          </div>
+        </div>
+
         {/* Save Bar */}
         <div className="flex items-center justify-between">
           <div className="text-xs text-slate-500 flex items-center gap-1.5">
@@ -211,6 +236,12 @@ export default function SettingsPage() {
           </button>
         </div>
       </form>
+
+      {/* Building Manager Modal */}
+      <BuildingManagerModal
+        isOpen={isBuildingModalOpen}
+        onClose={() => setIsBuildingModalOpen(false)}
+      />
     </div>
   );
 }

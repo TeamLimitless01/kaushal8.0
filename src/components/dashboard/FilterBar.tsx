@@ -1,9 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { Filter, Calendar, Building, X, RefreshCw, Zap, Droplets, Trash2, Layers } from 'lucide-react';
+import { useSession } from 'next-auth/react';
+import { Filter, Calendar, Building, X, RefreshCw, Zap, Droplets, Trash2, Layers, Pencil } from 'lucide-react';
 import { ResourceType } from '@prisma/client';
+import BuildingManagerModal, { ManagedBuilding } from '@/components/dashboard/BuildingManagerModal';
 
 interface FilterBarProps {
   buildings: Array<{ id: string; name: string }>;
@@ -29,6 +31,15 @@ export default function FilterBar({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { data: session } = useSession();
+  const isAdmin = (session?.user as { role?: string })?.role === 'ADMIN';
+
+  const [currentBuildingList, setCurrentBuildingList] = useState(buildings);
+  const [isBuildingModalOpen, setIsBuildingModalOpen] = useState(false);
+
+  useEffect(() => {
+    setCurrentBuildingList(buildings);
+  }, [buildings]);
 
   const updateParam = (key: string, value: string | null) => {
     const params = new URLSearchParams(searchParams?.toString() || '');
@@ -84,44 +95,40 @@ export default function FilterBar({
         <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-2xl shrink-0 overflow-x-auto scrollbar-none">
           <button
             onClick={() => updateParam('resourceType', null)}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-              !currentFilters.resourceType
-                ? 'bg-white text-slate-900 shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
-            }`}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${!currentFilters.resourceType
+              ? 'bg-white text-slate-900 shadow-xs'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
+              }`}
           >
             <Layers className="w-3.5 h-3.5 text-slate-500" />
             <span>All Resources</span>
           </button>
           <button
             onClick={() => updateParam('resourceType', ResourceType.ELECTRICITY)}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-              currentFilters.resourceType === ResourceType.ELECTRICITY
-                ? 'bg-emerald-600 text-white shadow-xs'
-                : 'text-slate-600 hover:text-emerald-700 hover:bg-emerald-50'
-            }`}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${currentFilters.resourceType === ResourceType.ELECTRICITY
+              ? 'bg-emerald-600 text-white shadow-xs'
+              : 'text-slate-600 hover:text-emerald-700 hover:bg-emerald-50'
+              }`}
           >
             <Zap className="w-3.5 h-3.5" />
             <span>Electricity</span>
           </button>
           <button
             onClick={() => updateParam('resourceType', ResourceType.WATER)}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-              currentFilters.resourceType === ResourceType.WATER
-                ? 'bg-cyan-600 text-white shadow-xs'
-                : 'text-slate-600 hover:text-cyan-700 hover:bg-cyan-50'
-            }`}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${currentFilters.resourceType === ResourceType.WATER
+              ? 'bg-cyan-600 text-white shadow-xs'
+              : 'text-slate-600 hover:text-cyan-700 hover:bg-cyan-50'
+              }`}
           >
             <Droplets className="w-3.5 h-3.5" />
             <span>Water</span>
           </button>
           <button
             onClick={() => updateParam('resourceType', ResourceType.WASTE)}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-              currentFilters.resourceType === ResourceType.WASTE
-                ? 'bg-amber-600 text-white shadow-xs'
-                : 'text-slate-600 hover:text-amber-700 hover:bg-amber-50'
-            }`}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${currentFilters.resourceType === ResourceType.WASTE
+              ? 'bg-amber-600 text-white shadow-xs'
+              : 'text-slate-600 hover:text-amber-700 hover:bg-amber-50'
+              }`}
           >
             <Trash2 className="w-3.5 h-3.5" />
             <span>Waste</span>
@@ -153,19 +160,30 @@ export default function FilterBar({
           </div>
 
           {/* Building Selector */}
-          <div className="relative min-w-[160px]">
+          <div className="relative min-w-[160px] flex items-center gap-1.5">
             <select
               value={currentFilters.buildingId || ''}
               onChange={(e) => updateParam('buildingId', e.target.value || null)}
               className="w-full text-xs font-semibold text-slate-800 bg-slate-50 hover:bg-white border border-slate-200/90 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition cursor-pointer"
             >
               <option value="">All SVVV Buildings</option>
-              {buildings.map((b) => (
+              {currentBuildingList.map((b) => (
                 <option key={b.id} value={b.id}>
                   {b.name}
                 </option>
               ))}
             </select>
+
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={() => setIsBuildingModalOpen(true)}
+                title="Admin: Manage & Edit Campus Buildings"
+                className="p-2.5 bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-600 rounded-xl border border-slate-200/80 transition cursor-pointer shrink-0"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
 
           {/* Room Selector (enabled if building selected) */}
@@ -222,6 +240,18 @@ export default function FilterBar({
           )}
         </div>
       </div>
+
+      {/* Admin Building Manager Modal */}
+      {isAdmin && (
+        <BuildingManagerModal
+          isOpen={isBuildingModalOpen}
+          onClose={() => setIsBuildingModalOpen(false)}
+          onBuildingsUpdated={(updated) => {
+            setCurrentBuildingList(updated);
+            router.refresh();
+          }}
+        />
+      )}
     </div>
   );
 }
