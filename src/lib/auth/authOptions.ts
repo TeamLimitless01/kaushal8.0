@@ -63,5 +63,5 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
   },
-  secret: process.env.NEXTAUTH_SECRET || 'ecosentinel-hackathon-svvv-secret-2026-supersecure-jwt-key',
+  secret: process.env.NEXTAUTH_SECRET || 'EcoCampus-hackathon-svvv-secret-2026-supersecure-jwt-key',
 };

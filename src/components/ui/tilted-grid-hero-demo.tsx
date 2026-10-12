@@ -169,7 +169,7 @@ export default function TiltedGridHeroDemo() {
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
               </span>
               <span className="text-xs font-semibold text-emerald-300">
-                EcoSentinel Intelligence Core • Feature Suite
+                EcoCampus Intelligence Core • Feature Suite
               </span>
             </div>
 
@@ -196,11 +196,10 @@ export default function TiltedGridHeroDemo() {
                   <button
                     key={feat.id}
                     onClick={() => setActiveFeature(feat.id)}
-                    className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
-                      isActive
+                    className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${isActive
                         ? "bg-emerald-500 text-black shadow-lg shadow-emerald-500/30 scale-105"
                         : "text-white/70 hover:text-white hover:bg-white/5"
-                    }`}
+                      }`}
                   >
                     <TabIcon className="w-3.5 h-3.5" />
                     <span>{feat.label}</span>

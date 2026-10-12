@@ -32,7 +32,7 @@ export async function uploadCsvToCloudinary(
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         resource_type: 'raw',
-        folder: 'ecosentinel-imports',
+        folder: 'EcoCampus-imports',
         public_id: `${Date.now()}-${fileName.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9_-]/g, '_')}`,
         format: 'csv',
       },
@@ -41,7 +41,7 @@ export async function uploadCsvToCloudinary(
           console.warn('Cloudinary upload warning:', error?.message);
           // Safe fallback ensures import workflow never breaks
           const safeName = fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
-          const mockPublicId = `ecosentinel-imports/${Date.now()}-${safeName}`;
+          const mockPublicId = `EcoCampus-imports/${Date.now()}-${safeName}`;
           resolve({
             url: `https://res.cloudinary.com/${cloudName}/raw/upload/v1/${mockPublicId}`,
             publicId: mockPublicId,

@@ -2,7 +2,7 @@ import { prisma } from '../src/lib/db/prisma';
 import bcrypt from 'bcryptjs';
 
 async function main() {
-  console.log("Seeding EcoSentinel database...");
+  console.log("Seeding EcoCampus database...");
 
   // 1. Ensure SVVV Campus exists
   const campus = await prisma.campus.upsert({

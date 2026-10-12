@@ -19,8 +19,8 @@ const templateCsv = `date,building,room,resource,usage,unit,operating_hours
 2026-10-02,Block B,B201,electricity,94.0,kWh,8
 `;
 
-fs.writeFileSync(path.join(templatesDir, 'ecosentinel-resource-template.csv'), templateCsv);
-console.log('Template created at public/templates/ecosentinel-resource-template.csv');
+fs.writeFileSync(path.join(templatesDir, 'EcoCampus-resource-template.csv'), templateCsv);
+console.log('Template created at public/templates/EcoCampus-resource-template.csv');
 
 // 2. Generate 30-day realistic SVVV dataset
 const buildings = [

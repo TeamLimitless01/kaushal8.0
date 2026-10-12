@@ -3,7 +3,7 @@ import './globals.css';
 import AuthProvider from '@/components/providers/AuthProvider';
 
 export const metadata: Metadata = {
-  title: 'EcoSentinel — AI Campus Sustainability Intelligence Platform',
+  title: 'EcoCampus — AI Campus Sustainability Intelligence Platform',
   description:
     'Real-time campus resource intelligence, historical consumption analytics, anomaly detection, and CO₂ impact management for higher education institutions.',
 };

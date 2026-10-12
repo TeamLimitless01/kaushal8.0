@@ -103,7 +103,7 @@ export default function DataExplorerPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `ecosentinel-data-export-page-${page}.csv`;
+    a.download = `EcoCampus-data-export-page-${page}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -276,13 +276,12 @@ export default function DataExplorerPage() {
                     <td className="px-4 py-2.5 text-slate-600">{r.room}</td>
                     <td className="px-4 py-2.5">
                       <span
-                        className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
-                          r.resource === 'ELECTRICITY'
+                        className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${r.resource === 'ELECTRICITY'
                             ? 'bg-emerald-50 text-emerald-800'
                             : r.resource === 'WATER'
-                            ? 'bg-cyan-50 text-cyan-800'
-                            : 'bg-amber-50 text-amber-800'
-                        }`}
+                              ? 'bg-cyan-50 text-cyan-800'
+                              : 'bg-amber-50 text-amber-800'
+                          }`}
                       >
                         {r.resource}
                       </span>

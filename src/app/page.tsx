@@ -66,11 +66,9 @@ export default function HomePage() {
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xl font-black tracking-tight text-white">
-                EcoSentinel
+                EcoCampus
               </span>
-              <span className="text-[10px] uppercase font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                v8.0 Live
-              </span>
+
             </div>
             <p className="text-[11px] text-emerald-300/80 font-medium tracking-wide">
               AI Campus Resource Intelligence
@@ -116,7 +114,7 @@ export default function HomePage() {
       {/* Main Container */}
       <main className="relative z-20 w-full max-w-6xl mx-auto px-6 py-12 md:py-16 flex flex-col items-center text-center">
         {/* Campus Live Pulse Pill */}
-        <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-emerald-950/80 border border-emerald-500/30 backdrop-blur-xl mb-6 shadow-2xl ring-1 ring-emerald-500/20">
+        {/* <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-emerald-950/80 border border-emerald-500/30 backdrop-blur-xl mb-6 shadow-2xl ring-1 ring-emerald-500/20">
           <span className="relative flex h-2.5 w-2.5">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 shadow-sm shadow-emerald-400" />
@@ -124,7 +122,7 @@ export default function HomePage() {
           <span className="text-xs font-semibold text-emerald-300 tracking-wide">
             Shri Vaishnav Vidyapeeth Vishwavidyalaya • Live Telemetry Stream
           </span>
-        </div>
+        </div> */}
 
         {/* Hero Headline */}
         <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black tracking-tight leading-[1.05] text-white">
@@ -136,7 +134,7 @@ export default function HomePage() {
         </h1>
 
         <p className="mt-6 text-sm sm:text-base md:text-lg text-emerald-100/80 max-w-3xl font-normal leading-relaxed">
-          EcoSentinel transforms raw campus energy, water, and waste sub-meter telemetry into enterprise-grade intelligence — featuring ISO 50001 compliance standards, statistical anomaly radar (mean + 1.8σ), and non-destructive Neon PostgreSQL ingestion.
+          EcoCampus transforms raw campus energy, water, and waste sub-meter telemetry into enterprise-grade intelligence — featuring ISO 50001 compliance standards, statistical anomaly radar (mean + 1.8σ), and non-destructive Neon PostgreSQL ingestion.
         </p>
 
         {/* Primary Action Buttons */}
@@ -300,11 +298,10 @@ export default function HomePage() {
               <div className="space-y-3">
                 <div
                   onClick={() => setSelectedCircuit('blockB')}
-                  className={`p-3 rounded-xl border cursor-pointer transition-all ${
-                    selectedCircuit === 'blockB'
-                      ? 'bg-emerald-950/40 border-emerald-500/40 ring-1 ring-emerald-500/20'
-                      : 'bg-white/5 border-white/10 hover:bg-white/10'
-                  }`}
+                  className={`p-3 rounded-xl border cursor-pointer transition-all ${selectedCircuit === 'blockB'
+                    ? 'bg-emerald-950/40 border-emerald-500/40 ring-1 ring-emerald-500/20'
+                    : 'bg-white/5 border-white/10 hover:bg-white/10'
+                    }`}
                 >
                   <div className="flex items-center justify-between text-xs font-bold text-white">
                     <span>Block B — High Performance Lab Feeder</span>
@@ -321,11 +318,10 @@ export default function HomePage() {
 
                 <div
                   onClick={() => setSelectedCircuit('library')}
-                  className={`p-3 rounded-xl border cursor-pointer transition-all ${
-                    selectedCircuit === 'library'
-                      ? 'bg-emerald-950/40 border-emerald-500/40 ring-1 ring-emerald-500/20'
-                      : 'bg-white/5 border-white/10 hover:bg-white/10'
-                  }`}
+                  className={`p-3 rounded-xl border cursor-pointer transition-all ${selectedCircuit === 'library'
+                    ? 'bg-emerald-950/40 border-emerald-500/40 ring-1 ring-emerald-500/20'
+                    : 'bg-white/5 border-white/10 hover:bg-white/10'
+                    }`}
                 >
                   <div className="flex items-center justify-between text-xs font-bold text-white">
                     <span>Central Library & Study Commons</span>
@@ -342,11 +338,10 @@ export default function HomePage() {
 
                 <div
                   onClick={() => setSelectedCircuit('workshop')}
-                  className={`p-3 rounded-xl border cursor-pointer transition-all ${
-                    selectedCircuit === 'workshop'
-                      ? 'bg-emerald-950/40 border-emerald-500/40 ring-1 ring-emerald-500/20'
-                      : 'bg-white/5 border-white/10 hover:bg-white/10'
-                  }`}
+                  className={`p-3 rounded-xl border cursor-pointer transition-all ${selectedCircuit === 'workshop'
+                    ? 'bg-emerald-950/40 border-emerald-500/40 ring-1 ring-emerald-500/20'
+                    : 'bg-white/5 border-white/10 hover:bg-white/10'
+                    }`}
                 >
                   <div className="flex items-center justify-between text-xs font-bold text-white">
                     <span>Engineering Mechanical Workshop</span>
@@ -508,7 +503,7 @@ export default function HomePage() {
                   Rolling Standard Deviation & Excess Impact Quantification
                 </h3>
                 <p className="text-xs sm:text-sm text-white/70 mt-3 leading-relaxed">
-                  Unlike brittle static thresholds that produce dozens of false alarms during exams or festivals, EcoSentinel establishes an empirical baseline requiring at least 7 historical observations per circuit. When consumption exceeds $\mu + 1.8\sigma$, it calculates excess cost in INR and excess CO₂ emissions.
+                  Unlike brittle static thresholds that produce dozens of false alarms during exams or festivals, EcoCampus establishes an empirical baseline requiring at least 7 historical observations per circuit. When consumption exceeds $\mu + 1.8\sigma$, it calculates excess cost in INR and excess CO₂ emissions.
                 </p>
               </div>
 
@@ -727,7 +722,7 @@ export default function HomePage() {
                   Composite Unique Keys & Non-Destructive Ingestion
                 </h3>
                 <p className="text-xs sm:text-sm text-white/70 mt-2 leading-relaxed">
-                  Traditional CSV systems overwrite or duplicate historical rows upon re-upload. EcoSentinel utilizes native PostgreSQL composite indices on <code className="text-emerald-300 font-mono text-[11px] bg-white/10 px-1 py-0.5 rounded">[campusId, buildingId, roomId, resourceType, recordedDate]</code> to safely merge multi-month datasets without data corruption.
+                  Traditional CSV systems overwrite or duplicate historical rows upon re-upload. EcoCampus utilizes native PostgreSQL composite indices on <code className="text-emerald-300 font-mono text-[11px] bg-white/10 px-1 py-0.5 rounded">[campusId, buildingId, roomId, resourceType, recordedDate]</code> to safely merge multi-month datasets without data corruption.
                 </p>
               </div>
 
@@ -825,37 +820,34 @@ export default function HomePage() {
                 <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
                 <div className="w-3 h-3 rounded-full bg-green-500/80" />
                 <span className="ml-2 text-xs font-mono text-emerald-300">
-                  ecosentinel://svvv.in/telemetry-core
+                  EcoCampus://svvv.in/telemetry-core
                 </span>
               </div>
               <div className="flex items-center gap-1.5 bg-black/40 p-1.5 rounded-2xl border border-white/10">
                 <button
                   onClick={() => setActiveTab('overview')}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                    activeTab === 'overview'
-                      ? 'bg-emerald-500/30 text-emerald-200 border border-emerald-500/40 shadow-sm'
-                      : 'text-white/60 hover:text-white'
-                  }`}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${activeTab === 'overview'
+                    ? 'bg-emerald-500/30 text-emerald-200 border border-emerald-500/40 shadow-sm'
+                    : 'text-white/60 hover:text-white'
+                    }`}
                 >
                   Resource Telemetry
                 </button>
                 <button
                   onClick={() => setActiveTab('anomalies')}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                    activeTab === 'anomalies'
-                      ? 'bg-emerald-500/30 text-emerald-200 border border-emerald-500/40 shadow-sm'
-                      : 'text-white/60 hover:text-white'
-                  }`}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${activeTab === 'anomalies'
+                    ? 'bg-emerald-500/30 text-emerald-200 border border-emerald-500/40 shadow-sm'
+                    : 'text-white/60 hover:text-white'
+                    }`}
                 >
                   Anomaly Radar
                 </button>
                 <button
                   onClick={() => setActiveTab('simulation')}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                    activeTab === 'simulation'
-                      ? 'bg-emerald-500/30 text-emerald-200 border border-emerald-500/40 shadow-sm'
-                      : 'text-white/60 hover:text-white'
-                  }`}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${activeTab === 'simulation'
+                    ? 'bg-emerald-500/30 text-emerald-200 border border-emerald-500/40 shadow-sm'
+                    : 'text-white/60 hover:text-white'
+                    }`}
                 >
                   What-If Simulator
                 </button>
@@ -982,7 +974,7 @@ export default function HomePage() {
           <div className="flex items-center gap-3">
             <Leaf className="w-4 h-4 text-emerald-400" />
             <p>
-              EcoSentinel Platform © 2026 • Shri Vaishnav Vidyapeeth Vishwavidyalaya, Indore
+              EcoCampus Platform © 2026 • Shri Vaishnav Vidyapeeth Vishwavidyalaya, Indore
             </p>
           </div>
           <div className="flex items-center gap-5 text-emerald-300/80 font-medium">

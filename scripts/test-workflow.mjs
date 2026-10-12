@@ -38,7 +38,7 @@ async function runEndToEndVerification() {
 
     // 3. Verify Downloadable CSV Template
     console.log('\nStep 3: Verifying CSV template integrity...');
-    const templatePath = path.join(process.cwd(), 'public', 'templates', 'ecosentinel-resource-template.csv');
+    const templatePath = path.join(process.cwd(), 'public', 'templates', 'EcoCampus-resource-template.csv');
     if (!fs.existsSync(templatePath)) throw new Error('Template file missing');
     const templateText = fs.readFileSync(templatePath, 'utf-8');
     const templateParsed = parseAndValidateCsv(templateText, 'template.csv');
@@ -61,7 +61,7 @@ async function runEndToEndVerification() {
     console.log('\nStep 5: Ingesting dataset into PostgreSQL with normalization & transaction...');
     const import1Result = await processAndStoreImport({
       fileName: 'svvv-campus-october-dataset.csv',
-      cloudinaryUrl: 'https://res.cloudinary.com/ecosentinel/raw/upload/v1/imports/svvv-october.csv',
+      cloudinaryUrl: 'https://res.cloudinary.com/EcoCampus/raw/upload/v1/imports/svvv-october.csv',
       publicId: 'imports/svvv-october',
       validRows: parseResult.validRows,
       totalCsvRows: parseResult.totalRows,
@@ -110,7 +110,7 @@ async function runEndToEndVerification() {
 
     const import2Result = await processAndStoreImport({
       fileName: 'svvv-campus-additional-records.csv',
-      cloudinaryUrl: 'https://res.cloudinary.com/ecosentinel/raw/upload/v1/imports/svvv-additional.csv',
+      cloudinaryUrl: 'https://res.cloudinary.com/EcoCampus/raw/upload/v1/imports/svvv-additional.csv',
       publicId: 'imports/svvv-additional',
       validRows: parseResult2.validRows,
       totalCsvRows: parseResult2.totalRows,
